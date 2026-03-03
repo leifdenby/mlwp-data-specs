@@ -49,6 +49,19 @@ def _write_index(page_names: list[str]) -> None:
     page_names : list[str]
         Generated page base names (without extension).
     """
+    grouped_pages: dict[str, list[tuple[str, str]]] = {
+        "space": [],
+        "time": [],
+        "uncertainty": [],
+    }
+    for name in page_names:
+        if name.startswith("space_"):
+            grouped_pages["space"].append((name, name.removeprefix("space_")))
+        elif name.startswith("time_"):
+            grouped_pages["time"].append((name, name.removeprefix("time_")))
+        elif name.startswith("uncertainty_"):
+            grouped_pages["uncertainty"].append((name, name.removeprefix("uncertainty_")))
+
     lines = [
         "# MLWP Trait Specifications",
         "",
@@ -70,8 +83,10 @@ def _write_index(page_names: list[str]) -> None:
         "## Available Spec Pages",
         "",
     ]
-    for name in page_names:
-        lines.append(f"- [{name.replace('_', ' ')}](traits/{name}.md)")
+    for trait_type in ["space", "time", "uncertainty"]:
+        lines.append(f"- {trait_type}")
+        for page_name, profile in sorted(grouped_pages[trait_type], key=lambda x: x[1]):
+            lines.append(f"  - [{profile}](traits/{page_name}.md)")
 
     (DOCS_DIR / "index.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

@@ -17,10 +17,13 @@ Both interfaces are expected:
 
 ## Available Spec Pages
 
-- [space grid](traits/space_grid.md)
-- [space point](traits/space_point.md)
-- [time forecast](traits/time_forecast.md)
-- [time observation](traits/time_observation.md)
-- [uncertainty deterministic](traits/uncertainty_deterministic.md)
-- [uncertainty ensemble](traits/uncertainty_ensemble.md)
-- [uncertainty quantile](traits/uncertainty_quantile.md)
+- space
+  - [grid](traits/space_grid.md)
+  - [point](traits/space_point.md)
+- time
+  - [forecast](traits/time_forecast.md)
+  - [observation](traits/time_observation.md)
+- uncertainty
+  - [deterministic](traits/uncertainty_deterministic.md)
+  - [ensemble](traits/uncertainty_ensemble.md)
+  - [quantile](traits/uncertainty_quantile.md)
