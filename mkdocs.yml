@@ -1,0 +1,17 @@
+site_name: MLWP Data Specs
+site_description: Trait-based dataset validation specifications
+repo_url: https://github.com/leifdenby/mlwp-data-specs
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Traits:
+      - Space Grid: traits/space_grid.md
+      - Space Point: traits/space_point.md
+      - Time Forecast: traits/time_forecast.md
+      - Time Observation: traits/time_observation.md
+      - Uncertainty Deterministic: traits/uncertainty_deterministic.md
+      - Uncertainty Ensemble: traits/uncertainty_ensemble.md
+      - Uncertainty Quantile: traits/uncertainty_quantile.md
