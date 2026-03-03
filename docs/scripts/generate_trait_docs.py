@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from mlwp_data_specs import __version__
@@ -15,6 +16,8 @@ from mlwp_data_specs.specs.traits.uncertainty import validate_dataset as validat
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCS_DIR = REPO_ROOT / "docs"
 TRAITS_DIR = DOCS_DIR / "traits"
+REPO_URL = "https://github.com/leifdenby/mlwp-data-specs"
+DEFAULT_BRANCH = "main"
 
 
 def _render_specs() -> dict[str, str]:
@@ -91,8 +94,64 @@ def _write_index(page_names: list[str]) -> None:
     (DOCS_DIR / "index.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _usage_examples_for_page(page_name: str) -> str:
-    """Return docs-only usage examples for a generated trait page.
+def _extract_frontmatter(spec_text: str) -> tuple[dict[str, str], str]:
+    """Parse YAML frontmatter from a spec markdown string.
+
+    Parameters
+    ----------
+    spec_text : str
+        Raw spec markdown including optional frontmatter.
+
+    Returns
+    -------
+    tuple[dict[str, str], str]
+        Parsed frontmatter key/value map and markdown body without frontmatter.
+    """
+    text = spec_text.strip()
+    if not text.startswith("---"):
+        return {}, text
+
+    match = re.match(r"---\s*\n(.*?)\n---\s*\n?", text, re.DOTALL)
+    if not match:
+        return {}, text
+
+    frontmatter: dict[str, str] = {}
+    for line in match.group(1).splitlines():
+        stripped = line.strip()
+        if not stripped or ":" not in stripped:
+            continue
+        key, value = stripped.split(":", 1)
+        frontmatter[key.strip()] = value.strip()
+
+    body = text[match.end() :].lstrip()
+    return frontmatter, body
+
+
+def _source_path_for_trait(trait: str) -> str:
+    """Map trait axis name to source module path.
+
+    Parameters
+    ----------
+    trait : str
+        Trait axis name.
+
+    Returns
+    -------
+    str
+        Relative repository path for the trait spec module.
+    """
+    mapping = {
+        "space": "src/mlwp_data_specs/specs/traits/spatial_coordinate.py",
+        "spatial_coordinate": "src/mlwp_data_specs/specs/traits/spatial_coordinate.py",
+        "time": "src/mlwp_data_specs/specs/traits/time_coordinate.py",
+        "time_coordinate": "src/mlwp_data_specs/specs/traits/time_coordinate.py",
+        "uncertainty": "src/mlwp_data_specs/specs/traits/uncertainty.py",
+    }
+    return mapping[trait]
+
+
+def _usage_block_for_page(page_name: str) -> str:
+    """Return docs-only usage instructions for a generated trait page.
 
     Parameters
     ----------
@@ -102,28 +161,25 @@ def _usage_examples_for_page(page_name: str) -> str:
     Returns
     -------
     str
-        Markdown section with CLI and Python examples for the page profile.
+        Markdown usage instructions.
     """
     trait, profile = page_name.split("_", 1)
-    cli_flag = trait
-    api_kwarg = trait
 
     return (
-        "## 5. How To Run This Trait Profile (Docs)\n\n"
         "Run with `uvx` from release on [pypi.org](https://pypi.org/):\n\n"
         "```bash\n"
-        f"uvx --with mlwp-data-specs mlwp.validate_trait <DATASET_PATH_OR_URL> --{cli_flag} {profile}\n"
+        f"uvx --with mlwp-data-specs mlwp.validate_trait <DATASET_PATH_OR_URL> --{trait} {profile}\n"
         "```\n\n"
         "> Warning: `mlwp-data-specs` is not published on PyPI yet, so this command is\n"
         "> included for future release usage.\n\n"
         "Run directly from GitHub source:\n\n"
         "```bash\n"
-        f'uvx --from "git+https://github.com/leifdenby/mlwp-data-specs" mlwp.validate_trait <DATASET_PATH_OR_URL> --{cli_flag} {profile}\n'
+        f'uvx --from "git+https://github.com/leifdenby/mlwp-data-specs" mlwp.validate_trait <DATASET_PATH_OR_URL> --{trait} {profile}\n'
         "```\n\n"
         "Python API:\n\n"
         "```python\n"
         "from mlwp_data_specs import check_dataset\n\n"
-        f'report = check_dataset(ds, {api_kwarg}="{profile}")\n'
+        f'report = check_dataset(ds, {trait}="{profile}")\n'
         "```\n"
     )
 
@@ -143,7 +199,43 @@ def _render_trait_page(page_name: str, content: str) -> str:
     str
         Markdown page content including docs-only usage examples.
     """
-    return content.strip() + "\n\n" + _usage_examples_for_page(page_name) + "\n"
+    frontmatter, body = _extract_frontmatter(content)
+    trait = frontmatter.get("trait", page_name.split("_", 1)[0])
+    profile = frontmatter.get("profile", page_name.split("_", 1)[1])
+    title = f"{trait.replace('_', ' ').title()} ({profile})"
+    source_path = _source_path_for_trait(trait)
+    source_url = f"{REPO_URL}/blob/{DEFAULT_BRANCH}/{source_path}"
+
+    frontmatter_lines = [f"{k}: {v}" for k, v in sorted(frontmatter.items())]
+    frontmatter_block = "\n".join(frontmatter_lines)
+    usage = _usage_block_for_page(page_name).strip()
+
+    parts = [
+        f"# {title}",
+        "",
+    ]
+    if frontmatter_block:
+        parts.extend(
+            [
+                "```yaml",
+                frontmatter_block,
+                "```",
+                "",
+            ]
+        )
+    parts.extend(
+        [
+            f"[View spec source on GitHub]({source_url})",
+            "",
+            usage,
+            "",
+            "---",
+            "",
+            body.strip(),
+            "",
+        ]
+    )
+    return "\n".join(parts)
 
 
 def main() -> None:
