@@ -18,8 +18,8 @@ This validator should enforce coordinate naming/metadata constraints (`name`, `s
 - [x] Phase 2: `mxalign` trait semantics adapted (space/time/uncertainty structure checks)
 - [x] Phase 3: Coordinate metadata checks implemented (`standard_name`, units, axis/attrs)
 - [x] Phase 4: Inline trait spec modules implemented (time, space, uncertainty)
-- [ ] Phase 5: CLI trait selectors implemented (`--space`, `--time`, `--uncertainty`)
-- [ ] Phase 5: CLI listing commands implemented (`--list-space`, `--list-time`, `--list-uncertainty`)
+- [x] Phase 5: CLI trait selectors implemented (`--space`, `--time`, `--uncertainty`)
+- [x] Phase 5: CLI listing commands implemented (`--list-space`, `--list-time`, `--list-uncertainty`)
 - [ ] Phase 6: Trait docs generator implemented and HTML docs build configured
 - [ ] Phase 7: Unit and CLI tests implemented
 - [ ] Phase 7: Integration test against HARMONIE Zarr URL pattern implemented
