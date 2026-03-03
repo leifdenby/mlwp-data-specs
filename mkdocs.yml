@@ -8,10 +8,13 @@ theme:
 nav:
   - Home: index.md
   - Traits:
-      - Space Grid: traits/space_grid.md
-      - Space Point: traits/space_point.md
-      - Time Forecast: traits/time_forecast.md
-      - Time Observation: traits/time_observation.md
-      - Uncertainty Deterministic: traits/uncertainty_deterministic.md
-      - Uncertainty Ensemble: traits/uncertainty_ensemble.md
-      - Uncertainty Quantile: traits/uncertainty_quantile.md
+      - Space:
+          - Grid: traits/space_grid.md
+          - Point: traits/space_point.md
+      - Time:
+          - Forecast: traits/time_forecast.md
+          - Observation: traits/time_observation.md
+      - Uncertainty:
+          - Deterministic: traits/uncertainty_deterministic.md
+          - Ensemble: traits/uncertainty_ensemble.md
+          - Quantile: traits/uncertainty_quantile.md
