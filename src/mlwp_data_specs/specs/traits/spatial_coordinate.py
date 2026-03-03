@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from dataclasses import dataclass, field
 from enum import Enum
 
 import xarray as xr
@@ -26,35 +25,6 @@ class Space(str, Enum):
     POINT = "point"
 
 
-@dataclass
-class PropertySpec:
-    """Structural requirements for a space trait profile."""
-
-    dim_variants: list[set[str]] = field(default_factory=list)
-    required_coords: set[str] = field(default_factory=set)
-    optional_dims: set[str] = field(default_factory=set)
-    optional_coords: set[str] = field(default_factory=set)
-
-
-SPACE_SPECS: dict[str, PropertySpec] = {
-    "grid": PropertySpec(
-        dim_variants=[
-            {"xc", "yc"},
-            {"grid_index"},
-            {"longitude", "latitude"},
-        ],
-        required_coords={"longitude", "latitude"},
-        optional_coords={"xc", "yc"},
-        optional_dims={"member"},
-    ),
-    "point": PropertySpec(
-        dim_variants=[{"point_index"}],
-        required_coords={"longitude", "latitude"},
-        optional_coords={"code", "elevation", "name", "country"},
-    ),
-}
-
-
 def validate_dataset(
     ds: xr.Dataset | None, *, trait: Space
 ) -> tuple[ValidationReport, str]:
@@ -74,18 +44,6 @@ def validate_dataset(
         Validation report and inline markdown specification text.
     """
     report = ValidationReport()
-    if trait == Space.GRID:
-        structural_requirements = """
-    - Accepted dimension variants are: `{'xc', 'yc'}` OR `{'grid_index'}` OR `{'longitude', 'latitude'}`.
-    - Required coordinates are: `longitude`, `latitude`.
-    - Optional projected coordinates are: `xc`, `yc`.
-    """
-    else:
-        structural_requirements = """
-    - Accepted dimension variant is: `{'point_index'}`.
-    - Required coordinates are: `longitude`, `latitude`.
-    - Optional point metadata coordinates are: `code`, `elevation`, `name`, `country`.
-    """
 
     spec_text = f"""
     ---
@@ -108,14 +66,75 @@ def validate_dataset(
 
     ## 3. Structural Requirements
 
-    {structural_requirements}
-    """
+    ### 3.1 Accepted Dimension Variants
 
-    spec = SPACE_SPECS[trait.value]
-    report += check_dim_variants(ds, axis="space", variants=spec.dim_variants)
+    """
+    if trait == Space.GRID:
+        spec_text += """
+    - The dataset MUST match one of the accepted dimension variants for this profile:
+      `[{'xc', 'yc'}, {'grid_index'}, {'longitude', 'latitude'}]`.
+    """
+        report += check_dim_variants(
+            ds,
+            axis="space",
+            variants=[
+                {"xc", "yc"},
+                {"grid_index"},
+                {"longitude", "latitude"},
+            ],
+        )
+    elif trait == Space.POINT:
+        spec_text += """
+    - The dataset MUST match one accepted dimension variant for this profile:
+      `[{'point_index'}]`.
+    """
+        report += check_dim_variants(ds, axis="space", variants=[{"point_index"}])
+    else:
+        raise NotImplementedError(f"Unsupported spatial trait: {trait!r}")
+
+    spec_text += """
+    ### 3.2 Required Coordinates
+
+    - The dataset MUST include required coordinates for this profile:
+      `['latitude', 'longitude']`.
+    """
     report += check_required_coords(
-        ds, axis="space", required_coords=spec.required_coords
+        ds, axis="space", required_coords={"longitude", "latitude"}
     )
+
+    spec_text += """
+    ### 3.3 Optional Coordinates
+
+    """
+    if trait == Space.GRID:
+        spec_text += """
+    - The dataset MAY include optional coordinates for this profile:
+      `['xc', 'yc']`.
+    """
+    elif trait == Space.POINT:
+        spec_text += """
+    - The dataset MAY include optional coordinates for this profile:
+      `['code', 'country', 'elevation', 'name']`.
+    """
+    else:
+        raise NotImplementedError(f"Unsupported spatial trait: {trait!r}")
+
+    spec_text += """
+    ### 3.4 Optional Dimensions
+
+    """
+    if trait == Space.GRID:
+        spec_text += """
+    - The dataset MAY include optional dimensions for this profile:
+      `['member']`.
+    """
+    elif trait == Space.POINT:
+        spec_text += """
+    - The dataset MAY include optional dimensions for this profile:
+      `[]`.
+    """
+    else:
+        raise NotImplementedError(f"Unsupported spatial trait: {trait!r}")
 
     spec_text += """
     ## 4. Coordinate Metadata Requirements

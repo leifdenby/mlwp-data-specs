@@ -11,6 +11,7 @@ import xarray as xr
 from loguru import logger
 
 from mlwp_data_specs import __version__
+from mlwp_data_specs.specs.reporting import ValidationReport, skip_all_checks
 from mlwp_data_specs.specs.traits.spatial_coordinate import Space
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
     validate_dataset as validate_space,
@@ -23,7 +24,6 @@ from mlwp_data_specs.specs.traits.uncertainty import Uncertainty
 from mlwp_data_specs.specs.traits.uncertainty import (
     validate_dataset as validate_uncertainty,
 )
-from mlwp_data_specs.specs.reporting import ValidationReport, skip_all_checks
 
 EnumType = TypeVar("EnumType", bound=Enum)
 

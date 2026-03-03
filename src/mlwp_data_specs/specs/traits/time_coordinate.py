@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from dataclasses import dataclass, field
 from enum import Enum
 
 import xarray as xr
@@ -26,29 +25,6 @@ class Time(str, Enum):
     OBSERVATION = "observation"
 
 
-@dataclass
-class PropertySpec:
-    """Structural requirements for a time trait profile."""
-
-    dim_variants: list[set[str]] = field(default_factory=list)
-    required_coords: set[str] = field(default_factory=set)
-    optional_dims: set[str] = field(default_factory=set)
-    optional_coords: set[str] = field(default_factory=set)
-
-
-TIME_SPECS: dict[str, PropertySpec] = {
-    "forecast": PropertySpec(
-        dim_variants=[{"reference_time", "lead_time"}],
-        required_coords={"reference_time", "lead_time"},
-        optional_coords={"valid_time"},
-    ),
-    "observation": PropertySpec(
-        dim_variants=[{"valid_time"}],
-        required_coords={"valid_time"},
-    ),
-}
-
-
 def validate_dataset(
     ds: xr.Dataset | None, *, trait: Time
 ) -> tuple[ValidationReport, str]:
@@ -68,26 +44,6 @@ def validate_dataset(
         Validation report and inline markdown specification text.
     """
     report = ValidationReport()
-    if trait == Time.FORECAST:
-        structural_requirements = """
-    - Accepted dimension variant is: `{'reference_time', 'lead_time'}`.
-    - Required coordinates are: `reference_time`, `lead_time`.
-    - Optional coordinate is: `valid_time`.
-    """
-        metadata_requirements = """
-    - `reference_time` MUST have `standard_name` equal to `forecast_reference_time` or `time`.
-    - `lead_time` MUST have `standard_name` equal to `forecast_period`.
-    - `lead_time` MUST have `units` in one of: `s`, `seconds`, `h`, `hours`.
-    - If `valid_time` is present, it MUST have `standard_name` equal to `time`.
-    """
-    else:
-        structural_requirements = """
-    - Accepted dimension variant is: `{'valid_time'}`.
-    - Required coordinate is: `valid_time`.
-    """
-        metadata_requirements = """
-    - `valid_time` MUST have `standard_name` equal to `time`.
-    """
 
     spec_text = f"""
     ---
@@ -110,20 +66,77 @@ def validate_dataset(
 
     ## 3. Structural Requirements
 
-    {structural_requirements}
+    ### 3.1 Accepted Dimension Variants
     """
+    if trait == Time.FORECAST:
+        spec_text += """
+    - The dataset MUST match one accepted dimension variant for this profile:
+      `[{'reference_time', 'lead_time'}]`.
+    """
+        report += check_dim_variants(
+            ds, axis="time", variants=[{"reference_time", "lead_time"}]
+        )
+    elif trait == Time.OBSERVATION:
+        spec_text += """
+    - The dataset MUST match one accepted dimension variant for this profile:
+      `[{'valid_time'}]`.
+    """
+        report += check_dim_variants(ds, axis="time", variants=[{"valid_time"}])
+    else:
+        raise NotImplementedError(f"Unsupported time trait: {trait!r}")
 
-    spec = TIME_SPECS[trait.value]
-    report += check_dim_variants(ds, axis="time", variants=spec.dim_variants)
-    report += check_required_coords(
-        ds, axis="time", required_coords=spec.required_coords
-    )
+    spec_text += """
+    ### 3.2 Required Coordinates
+    """
+    if trait == Time.FORECAST:
+        spec_text += """
+    - The dataset MUST include required coordinates for this profile:
+      `['lead_time', 'reference_time']`.
+    """
+        report += check_required_coords(
+            ds, axis="time", required_coords={"reference_time", "lead_time"}
+        )
+    elif trait == Time.OBSERVATION:
+        spec_text += """
+    - The dataset MUST include required coordinates for this profile:
+      `['valid_time']`.
+    """
+        report += check_required_coords(ds, axis="time", required_coords={"valid_time"})
+    else:
+        raise NotImplementedError(f"Unsupported time trait: {trait!r}")
 
-    spec_text += f"""
+    spec_text += """
+    ### 3.3 Optional Coordinates
+    """
+    if trait == Time.FORECAST:
+        spec_text += """
+    - The dataset MAY include optional coordinates for this profile:
+      `['valid_time']`.
+    """
+    elif trait == Time.OBSERVATION:
+        spec_text += """
+    - The dataset MAY include optional coordinates for this profile:
+      `[]`.
+    """
+    else:
+        raise NotImplementedError(f"Unsupported time trait: {trait!r}")
+
+    spec_text += """
     ## 4. Coordinate Metadata Requirements
-
-    {metadata_requirements}
     """
+    if trait == Time.FORECAST:
+        spec_text += """
+    - `reference_time` MUST have `standard_name` equal to `forecast_reference_time` or `time`.
+    - `lead_time` MUST have `standard_name` equal to `forecast_period`.
+    - `lead_time` MUST have `units` in one of: `s`, `seconds`, `h`, `hours`.
+    - If `valid_time` is present, it MUST have `standard_name` equal to `time`.
+    """
+    elif trait == Time.OBSERVATION:
+        spec_text += """
+    - `valid_time` MUST have `standard_name` equal to `time`.
+    """
+    else:
+        raise NotImplementedError(f"Unsupported time trait: {trait!r}")
 
     report += check_time_coordinate_metadata(ds, trait=trait)
 

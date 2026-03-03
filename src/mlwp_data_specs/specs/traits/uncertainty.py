@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from dataclasses import dataclass, field
 from enum import Enum
 
 import xarray as xr
@@ -27,29 +26,6 @@ class Uncertainty(str, Enum):
     QUANTILE = "quantile"
 
 
-@dataclass
-class PropertySpec:
-    """Structural requirements for an uncertainty trait profile."""
-
-    dim_variants: list[set[str]] = field(default_factory=list)
-    required_coords: set[str] = field(default_factory=set)
-    optional_dims: set[str] = field(default_factory=set)
-    optional_coords: set[str] = field(default_factory=set)
-
-
-UNCERTAINTY_SPECS: dict[str, PropertySpec] = {
-    "deterministic": PropertySpec(),
-    "ensemble": PropertySpec(
-        dim_variants=[{"member"}],
-        required_coords={"member"},
-    ),
-    "quantile": PropertySpec(
-        dim_variants=[{"quantile"}],
-        required_coords={"quantile"},
-    ),
-}
-
-
 def validate_dataset(
     ds: xr.Dataset | None, *, trait: Uncertainty
 ) -> tuple[ValidationReport, str]:
@@ -69,31 +45,6 @@ def validate_dataset(
         Validation report and inline markdown specification text.
     """
     report = ValidationReport()
-    if trait == Uncertainty.DETERMINISTIC:
-        structural_requirements = """
-    - No uncertainty-specific dimensions or coordinates are required.
-    """
-        metadata_requirements = """
-    - No uncertainty coordinate metadata is required.
-    """
-    elif trait == Uncertainty.ENSEMBLE:
-        structural_requirements = """
-    - Accepted dimension variant is: `{'member'}`.
-    - Required coordinate is: `member`.
-    """
-        metadata_requirements = """
-    - `member` MUST have `standard_name` equal to `realization`.
-    """
-    else:
-        structural_requirements = """
-    - Accepted dimension variant is: `{'quantile'}`.
-    - Required coordinate is: `quantile`.
-    """
-        metadata_requirements = """
-    - `quantile` MUST have `standard_name` equal to `quantile`.
-    - `quantile` MUST have `units` equal to `1`.
-    - All `quantile` coordinate values MUST be within `[0, 1]`.
-    """
 
     spec_text = f"""
     ---
@@ -116,20 +67,82 @@ def validate_dataset(
 
     ## 3. Structural Requirements
 
-    {structural_requirements}
+    ### 3.1 Accepted Dimension Variants
     """
+    if trait == Uncertainty.DETERMINISTIC:
+        spec_text += """
+    - No uncertainty-specific dimensions are required for this profile.
+    """
+        report += check_dim_variants(ds, axis="uncertainty", variants=[])
+    elif trait == Uncertainty.ENSEMBLE:
+        spec_text += """
+    - The dataset MUST match one accepted dimension variant for this profile:
+      `[{'member'}]`.
+    """
+        report += check_dim_variants(ds, axis="uncertainty", variants=[{"member"}])
+    elif trait == Uncertainty.QUANTILE:
+        spec_text += """
+    - The dataset MUST match one accepted dimension variant for this profile:
+      `[{'quantile'}]`.
+    """
+        report += check_dim_variants(ds, axis="uncertainty", variants=[{"quantile"}])
+    else:
+        raise NotImplementedError(f"Unsupported uncertainty trait: {trait!r}")
 
-    spec = UNCERTAINTY_SPECS[trait.value]
-    report += check_dim_variants(ds, axis="uncertainty", variants=spec.dim_variants)
-    report += check_required_coords(
-        ds, axis="uncertainty", required_coords=spec.required_coords
-    )
+    spec_text += """
+    ### 3.2 Required Coordinates
+    """
+    if trait == Uncertainty.DETERMINISTIC:
+        spec_text += """
+    - No required uncertainty coordinates exist for this profile.
+    """
+        report += check_required_coords(ds, axis="uncertainty", required_coords=set())
+    elif trait == Uncertainty.ENSEMBLE:
+        spec_text += """
+    - The dataset MUST include required coordinates for this profile:
+      `['member']`.
+    """
+        report += check_required_coords(
+            ds, axis="uncertainty", required_coords={"member"}
+        )
+    elif trait == Uncertainty.QUANTILE:
+        spec_text += """
+    - The dataset MUST include required coordinates for this profile:
+      `['quantile']`.
+    """
+        report += check_required_coords(
+            ds, axis="uncertainty", required_coords={"quantile"}
+        )
+    else:
+        raise NotImplementedError(f"Unsupported uncertainty trait: {trait!r}")
 
-    spec_text += f"""
+    spec_text += """
+    ### 3.3 Optional Coordinates
+
+    - The dataset MAY include optional coordinates for this profile: `[]`.
+
+    ### 3.4 Optional Dimensions
+
+    - The dataset MAY include optional dimensions for this profile: `[]`.
+
     ## 4. Coordinate Metadata Requirements
-
-    {metadata_requirements}
     """
+    if trait == Uncertainty.DETERMINISTIC:
+        spec_text += """
+    - No uncertainty coordinate metadata is required.
+    """
+    elif trait == Uncertainty.ENSEMBLE:
+        spec_text += """
+    - `member` MUST have `standard_name` equal to `realization`.
+    """
+    elif trait == Uncertainty.QUANTILE:
+        spec_text += """
+    - `quantile` MUST have `standard_name` equal to `quantile`.
+    - `quantile` MUST have `units` equal to `1`.
+    - All `quantile` coordinate values MUST be within `[0, 1]`.
+    """
+    else:
+        raise NotImplementedError(f"Unsupported uncertainty trait: {trait!r}")
 
     report += check_uncertainty_coordinate_metadata(ds, trait=trait)
 
