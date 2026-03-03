@@ -71,8 +71,6 @@ def validate_dataset(
     if trait == Time.FORECAST:
         spec_text += """
     - The dataset MUST include both `reference_time` and `lead_time` dimensions.
-    - This profile enforces the single time dimension variant
-      `{'reference_time', 'lead_time'}`.
     """
         report += check_dim_variants(
             ds, axis="time", variants=[{"reference_time", "lead_time"}]
@@ -80,7 +78,6 @@ def validate_dataset(
     elif trait == Time.OBSERVATION:
         spec_text += """
     - The dataset MUST include the `valid_time` dimension.
-    - This profile enforces the single time dimension variant `{'valid_time'}`.
     """
         report += check_dim_variants(ds, axis="time", variants=[{"valid_time"}])
     else:
