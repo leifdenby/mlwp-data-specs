@@ -32,6 +32,32 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Uncertainty) -> tuple[Vali
         Validation report and inline markdown specification text.
     """
     report = ValidationReport()
+    if trait == Uncertainty.DETERMINISTIC:
+        structural_requirements = """
+    - No uncertainty-specific dimensions or coordinates are required.
+    """
+        metadata_requirements = """
+    - No uncertainty coordinate metadata is required.
+    """
+    elif trait == Uncertainty.ENSEMBLE:
+        structural_requirements = """
+    - Accepted dimension variant is: `{'member'}`.
+    - Required coordinate is: `member`.
+    """
+        metadata_requirements = """
+    - `member` MUST have `standard_name` equal to `realization`.
+    """
+    else:
+        structural_requirements = """
+    - Accepted dimension variant is: `{'quantile'}`.
+    - Required coordinate is: `quantile`.
+    """
+        metadata_requirements = """
+    - `quantile` MUST have `standard_name` equal to `quantile`.
+    - `quantile` MUST have `units` equal to `1`.
+    - All `quantile` coordinate values MUST be within `[0, 1]`.
+    """
+
     spec_text = f"""
     ---
     trait: {IDENTIFIER}
@@ -45,9 +71,7 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Uncertainty) -> tuple[Vali
 
     ## 2. Structural Requirements
 
-    - Deterministic datasets MAY omit uncertainty coordinates.
-    - Ensemble datasets MUST provide `member` coordinate support.
-    - Quantile datasets MUST provide `quantile` coordinate support.
+    {structural_requirements}
     """
 
     report += check_uncertainty_trait_structure(ds, trait=trait)
@@ -55,8 +79,7 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Uncertainty) -> tuple[Vali
     spec_text += """
     ## 3. Coordinate Metadata Requirements
 
-    - Ensemble mode SHOULD represent realization members with CF-compliant metadata.
-    - Quantile mode MUST provide `quantile` metadata and quantile values in [0, 1].
+    {metadata_requirements}
     """
 
     report += check_uncertainty_coordinate_metadata(ds, trait=trait)

@@ -32,6 +32,19 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Space) -> tuple[Validation
         Validation report and inline markdown specification text.
     """
     report = ValidationReport()
+    if trait == Space.GRID:
+        structural_requirements = """
+    - Accepted dimension variants are: `{'xc', 'yc'}` OR `{'grid_index'}` OR `{'longitude', 'latitude'}`.
+    - Required coordinates are: `longitude`, `latitude`.
+    - Optional projected coordinates are: `xc`, `yc`.
+    """
+    else:
+        structural_requirements = """
+    - Accepted dimension variant is: `{'point_index'}`.
+    - Required coordinates are: `longitude`, `latitude`.
+    - Optional point metadata coordinates are: `code`, `elevation`, `name`, `country`.
+    """
+
     spec_text = f"""
     ---
     trait: {IDENTIFIER}
@@ -45,8 +58,7 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Space) -> tuple[Validation
 
     ## 2. Structural Requirements
 
-    - The dataset MUST provide dimensions and coordinates accepted by the selected spatial trait profile.
-    - Required spatial coordinates MUST be present.
+    {structural_requirements}
     """
 
     report += check_space_trait_structure(ds, trait=trait)

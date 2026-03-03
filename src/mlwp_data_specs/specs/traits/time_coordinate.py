@@ -32,6 +32,27 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Time) -> tuple[ValidationR
         Validation report and inline markdown specification text.
     """
     report = ValidationReport()
+    if trait == Time.FORECAST:
+        structural_requirements = """
+    - Accepted dimension variant is: `{'reference_time', 'lead_time'}`.
+    - Required coordinates are: `reference_time`, `lead_time`.
+    - Optional coordinate is: `valid_time`.
+    """
+        metadata_requirements = """
+    - `reference_time` MUST have `standard_name` equal to `forecast_reference_time` or `time`.
+    - `lead_time` MUST have `standard_name` equal to `forecast_period`.
+    - `lead_time` MUST have `units` in one of: `s`, `seconds`, `h`, `hours`.
+    - If `valid_time` is present, it MUST have `standard_name` equal to `time`.
+    """
+    else:
+        structural_requirements = """
+    - Accepted dimension variant is: `{'valid_time'}`.
+    - Required coordinate is: `valid_time`.
+    """
+        metadata_requirements = """
+    - `valid_time` MUST have `standard_name` equal to `time`.
+    """
+
     spec_text = f"""
     ---
     trait: {IDENTIFIER}
@@ -45,7 +66,7 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Time) -> tuple[ValidationR
 
     ## 2. Structural Requirements
 
-    - The dataset MUST provide required time dimensions and coordinate names for the selected time trait profile.
+    {structural_requirements}
     """
 
     report += check_time_trait_structure(ds, trait=trait)
@@ -53,9 +74,7 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Time) -> tuple[ValidationR
     spec_text += """
     ## 3. Coordinate Metadata Requirements
 
-    - Time coordinates MUST expose CF-compatible metadata.
-    - `standard_name` MUST be set for required time coordinates.
-    - For forecast lead times, units MUST indicate elapsed time.
+    {metadata_requirements}
     """
 
     report += check_time_coordinate_metadata(ds, trait=trait)
