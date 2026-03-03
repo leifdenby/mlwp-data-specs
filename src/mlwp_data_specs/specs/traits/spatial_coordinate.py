@@ -95,8 +95,7 @@ def validate_dataset(
     spec_text += """
     ### 3.2 Required Coordinates
 
-    - The dataset MUST include required coordinates for this profile:
-      `['latitude', 'longitude']`.
+    - The dataset MUST include the `latitude` and `longitude` coordinates.
     """
     report += check_required_coords(
         ds, axis="space", required_coords={"longitude", "latitude"}

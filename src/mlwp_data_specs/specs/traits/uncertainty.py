@@ -94,21 +94,19 @@ def validate_dataset(
     """
     if trait == Uncertainty.DETERMINISTIC:
         spec_text += """
-    - No required uncertainty coordinates exist for this profile.
+    - This profile defines no required uncertainty coordinates.
     """
         report += check_required_coords(ds, axis="uncertainty", required_coords=set())
     elif trait == Uncertainty.ENSEMBLE:
         spec_text += """
-    - The dataset MUST include required coordinates for this profile:
-      `['member']`.
+    - The dataset MUST include the `member` coordinate.
     """
         report += check_required_coords(
             ds, axis="uncertainty", required_coords={"member"}
         )
     elif trait == Uncertainty.QUANTILE:
         spec_text += """
-    - The dataset MUST include required coordinates for this profile:
-      `['quantile']`.
+    - The dataset MUST include the `quantile` coordinate.
     """
         report += check_required_coords(
             ds, axis="uncertainty", required_coords={"quantile"}

@@ -91,16 +91,14 @@ def validate_dataset(
     """
     if trait == Time.FORECAST:
         spec_text += """
-    - The dataset MUST include required coordinates for this profile:
-      `['lead_time', 'reference_time']`.
+    - The dataset MUST include the `lead_time` and `reference_time` coordinates.
     """
         report += check_required_coords(
             ds, axis="time", required_coords={"reference_time", "lead_time"}
         )
     elif trait == Time.OBSERVATION:
         spec_text += """
-    - The dataset MUST include required coordinates for this profile:
-      `['valid_time']`.
+    - The dataset MUST include the `valid_time` coordinate.
     """
         report += check_required_coords(ds, axis="time", required_coords={"valid_time"})
     else:
