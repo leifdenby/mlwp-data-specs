@@ -38,11 +38,41 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Space) -> tuple[Validation
     - Required coordinates are: `longitude`, `latitude`.
     - Optional projected coordinates are: `xc`, `yc`.
     """
+        usage_examples = """
+    ### CLI
+
+    ```bash
+    uv run mlwp.validate_trait /path/to/dataset.zarr --space grid
+    ```
+
+    ### Python API
+
+    ```python
+    from mlwp_data_specs import check_dataset
+
+    report = check_dataset(ds, space="grid")
+    ```
+    """
     else:
         structural_requirements = """
     - Accepted dimension variant is: `{'point_index'}`.
     - Required coordinates are: `longitude`, `latitude`.
     - Optional point metadata coordinates are: `code`, `elevation`, `name`, `country`.
+    """
+        usage_examples = """
+    ### CLI
+
+    ```bash
+    uv run mlwp.validate_trait /path/to/dataset.zarr --space point
+    ```
+
+    ### Python API
+
+    ```python
+    from mlwp_data_specs import check_dataset
+
+    report = check_dataset(ds, space="point")
+    ```
     """
 
     spec_text = f"""
@@ -71,5 +101,11 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Space) -> tuple[Validation
     """
 
     report += check_space_coordinate_metadata(ds, trait=trait)
+
+    spec_text += f"""
+    ## 4. How To Run This Trait Profile
+
+    {usage_examples}
+    """
 
     return report, textwrap.dedent(spec_text)

@@ -44,6 +44,21 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Time) -> tuple[ValidationR
     - `lead_time` MUST have `units` in one of: `s`, `seconds`, `h`, `hours`.
     - If `valid_time` is present, it MUST have `standard_name` equal to `time`.
     """
+        usage_examples = """
+    ### CLI
+
+    ```bash
+    uv run mlwp.validate_trait /path/to/dataset.zarr --time forecast
+    ```
+
+    ### Python API
+
+    ```python
+    from mlwp_data_specs import check_dataset
+
+    report = check_dataset(ds, time="forecast")
+    ```
+    """
     else:
         structural_requirements = """
     - Accepted dimension variant is: `{'valid_time'}`.
@@ -51,6 +66,21 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Time) -> tuple[ValidationR
     """
         metadata_requirements = """
     - `valid_time` MUST have `standard_name` equal to `time`.
+    """
+        usage_examples = """
+    ### CLI
+
+    ```bash
+    uv run mlwp.validate_trait /path/to/dataset.zarr --time observation
+    ```
+
+    ### Python API
+
+    ```python
+    from mlwp_data_specs import check_dataset
+
+    report = check_dataset(ds, time="observation")
+    ```
     """
 
     spec_text = f"""
@@ -78,5 +108,11 @@ def validate_dataset(ds: xr.Dataset | None, *, trait: Time) -> tuple[ValidationR
     """
 
     report += check_time_coordinate_metadata(ds, trait=trait)
+
+    spec_text += f"""
+    ## 4. How To Run This Trait Profile
+
+    {usage_examples}
+    """
 
     return report, textwrap.dedent(spec_text)
