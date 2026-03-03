@@ -6,7 +6,7 @@ import numpy as np
 import xarray as xr
 
 from mlwp_data_specs.traits.properties import Time
-from mlwp_data_specs.traits.time_coordinate import validate_dataset
+from mlwp_data_specs.specs.traits.time_coordinate import validate_dataset
 
 
 def _observation_ds(valid: bool = True) -> xr.Dataset:
