@@ -6,10 +6,10 @@ Trait-based dataset validator for weather/climate datasets in Zarr format.
 
 ## Why this was made
 
-To facilitate comparing forecasts from MLWP (Machine Learning Weather Prediction) models this validator implements a specification so that a single well-defined format can be targeted. The motivation for this to allow different groups to share their forecasts in a common format so that general-purpose tooling can be built to examine these forecasts.
-In particular, the specification is organized around **traits** (for example, how spatial location is represented) so downstream tools like [`mxalign`](https://github.com/rmi-mlwp/mxalign) can deterministically map between datasets, i.e. *align* datasets that represent traits differently (for example, point-wise observations to gridded data, or the inverse mapping).
+To facilitate comparing forecasts from MLWP (Machine Learning Weather Prediction) models this validator implements  specifications so that a single well-defined format can be targeted. The motivation for this to allow different groups to share their forecasts in a common format so that general-purpose tooling can be built to examine these forecasts.
+Specifically, the specifications is organized around **traits** (for example, how spatial location is represented) so that downstream tools like [`mxalign`](https://github.com/rmi-mlwp/mxalign) can deterministically map between datasets - or *align* datasets - that represent traits differently (for example, point-wise observations to gridded data, or the inverse mapping).
 
-Multiple projects in ML weather pipelines need consistent, machine-checkable guarantees around coordinate structure and metadata. This repository was created to:
+In summary, the goals of this project are to:
 
 1. make trait-level dataset requirements explicit (`time`, `space`, `uncertainty`)
 2. keep human-readable spec text and executable validation logic side-by-side
