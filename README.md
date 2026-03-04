@@ -4,6 +4,8 @@
 
 Trait-based dataset validator for weather/climate datasets in Zarr format.
 
+In particular, the specification is organized around **traits** (for example, how spatial location is represented) so downstream tools like [`mxalign`](https://github.com/rmi-mlwp/mxalign) can deterministically map between datasets, i.e. *align* datasets that represent traits differently (for example, point-wise observations to gridded data, or the inverse mapping).
+
 ## Why this was made
 
 To facilitate comparing forecasts from MLWP (Machine Learning Weather Prediction) models this validator implements a specification so that a single well-defined format can be targeted. The motivation for this to allow different groups to share their forecasts in a common format so that general-purpose tooling can be built to examine these forecasts.
@@ -14,6 +16,25 @@ Multiple projects in ML weather pipelines need consistent, machine-checkable gua
 2. keep human-readable spec text and executable validation logic side-by-side
 3. provide both CLI and Python APIs for local and remote Zarr validation
 4. publish linkable HTML spec docs directly from the validator code
+
+## When should you use this?
+
+Use `mlwp-data-specs` when you need to verify that a dataset follows agreed MLWP trait conventions, regardless of whether you will run alignment operations.
+
+The intended split is:
+
+1. `mlwp-data-specs`: define and validate dataset structure/metadata contracts
+2. `mxalign`: perform alignment/transformation operations on datasets
+
+Typical use cases:
+
+1. **Upstream reference dataset creation**: validate produced reference datasets (observations, NWP forecasts, etc.) at write-time (or just before writing) so they are known to satisfy the shared spec.
+2. **Inference pipelines**: validate model output immediately at inference time before publishing/storing results.
+3. **Pre-check before alignment**: validate first, then pass conformant datasets to `mxalign`.
+4. **Downstream consumers that do not align**: visualization, QA, and analytics tools can enforce input structure without running alignment logic.
+5. **CI quality gates**: fail fast when datasets drift from required trait conventions.
+
+Concrete examples where this is useful include integrating checks in `nwp-forecast-zarr-creator` and validating upstream inference outputs (for example from ANNA / `neural-lam`) so downstream tooling, including `mxalign`, can consume them reliably.
 
 ## What is this?
 
