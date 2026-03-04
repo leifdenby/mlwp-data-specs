@@ -162,7 +162,7 @@ Regenerate docs pages and build site:
 
 ```bash
 uv run python docs/scripts/generate_trait_docs.py
-uv run mkdocs build --strict
+uv run mkdocs build -f docs/mkdocs.yml --strict
 ```
 
 ## Inspirations, prior work

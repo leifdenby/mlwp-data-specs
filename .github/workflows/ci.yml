@@ -39,7 +39,7 @@ jobs:
       - name: Generate docs
         run: uv run python docs/scripts/generate_trait_docs.py
       - name: Build mkdocs
-        run: uv run mkdocs build --strict
+        run: uv run mkdocs build -f docs/mkdocs.yml --strict
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
