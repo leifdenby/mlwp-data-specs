@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 from typing import TypeVar
 
 import xarray as xr
 
+from mlwp_data_specs.loaders import (
+    import_loader_hooks,
+    open_with_loader,
+    validate_loader_profiles,
+)
 from mlwp_data_specs.specs.reporting import ValidationReport
 from mlwp_data_specs.specs.traits.spatial_coordinate import Space
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
@@ -122,3 +128,59 @@ def validate_dataset(
         report += trait_report
 
     return report
+
+
+def open_dataset(
+    dataset_path: str | list[str],
+    *,
+    loader: str | None = None,
+    time: Time | str | None = None,
+    space: Space | str | None = None,
+    uncertainty: Uncertainty | str | None = None,
+    storage_options: dict[str, Any] | None = None,
+) -> xr.Dataset | xr.DataArray:
+    """Open a dataset directly or through an optional loader module.
+
+    Parameters
+    ----------
+    dataset_path : str | list[str]
+        Path or paths to dataset stores.
+    loader : str | None, optional
+        Loader module reference. A value ending in ``.py`` is treated as a file
+        path. A value containing ``.`` is treated as a Python module path.
+    time : Time | str | None, optional
+        Optional time trait selector used to verify loader compatibility.
+    space : Space | str | None, optional
+        Optional space trait selector used to verify loader compatibility.
+    uncertainty : Uncertainty | str | None, optional
+        Optional uncertainty trait selector used to verify loader compatibility.
+    storage_options : dict[str, Any] | None, optional
+        Storage options forwarded to :func:`xarray.open_dataset`.
+
+    Returns
+    -------
+    xr.Dataset | xr.DataArray
+        Opened dataset-like object.
+    """
+    if loader is None:
+        return xr.open_dataset(
+            dataset_path,
+            storage_options=storage_options,
+        )
+
+    hooks = import_loader_hooks(loader)
+    validate_loader_profiles(
+        hooks,
+        time=_coerce_enum(time, Time, "time").value if time is not None else None,
+        space=_coerce_enum(space, Space, "space").value if space is not None else None,
+        uncertainty=(
+            _coerce_enum(uncertainty, Uncertainty, "uncertainty").value
+            if uncertainty is not None
+            else None
+        ),
+    )
+    return open_with_loader(
+        dataset_path,
+        hooks=hooks,
+        storage_options=storage_options,
+    )

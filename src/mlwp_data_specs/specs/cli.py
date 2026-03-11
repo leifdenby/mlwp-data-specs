@@ -7,10 +7,10 @@ from collections.abc import Sequence
 from enum import Enum
 from typing import TypeVar
 
-import xarray as xr
 from loguru import logger
 
 from mlwp_data_specs import __version__
+from mlwp_data_specs.api import open_dataset
 from mlwp_data_specs.specs.reporting import ValidationReport, skip_all_checks
 from mlwp_data_specs.specs.traits.spatial_coordinate import Space
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
@@ -58,7 +58,18 @@ def build_parser() -> argparse.ArgumentParser:
             "At least one of --space/--time/--uncertainty must be provided."
         )
     )
-    parser.add_argument("dataset_path", nargs="?", help="Path/URL to dataset (zarr)")
+    parser.add_argument(
+        "dataset_paths",
+        nargs="*",
+        help="One or more dataset paths/URLs to validate",
+    )
+    parser.add_argument(
+        "--loader",
+        help=(
+            "Optional loader module. Use a .py file path or a dotted Python "
+            "module path that defines optional preprocess/concat_dim/postprocess hooks."
+        ),
+    )
     parser.add_argument(
         "--space", choices=_choice_values(Space), help="Space trait name"
     )
@@ -193,8 +204,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "At least one trait must be selected with --space/--time/--uncertainty"
         )
 
-    if not args.print_spec_markdown and not args.dataset_path:
-        parser.error("dataset_path is required unless --print-spec-markdown is used")
+    if not args.print_spec_markdown and not args.dataset_paths:
+        parser.error("At least one dataset path is required unless --print-spec-markdown is used")
 
     logger.info(f"Running mlwp-data-specs {__version__}")
 
@@ -215,7 +226,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.s3_anon:
         storage_options["anon"] = True
 
-    ds = xr.open_zarr(args.dataset_path, storage_options=storage_options or None)
+    dataset_input = args.dataset_paths[0] if len(args.dataset_paths) == 1 else args.dataset_paths
+
+    ds = open_dataset(
+        dataset_input,
+        loader=args.loader,
+        time=time,
+        space=space,
+        uncertainty=uncertainty,
+        storage_options=storage_options or None,
+    )
     if storage_options:
         ds.encoding.setdefault("storage_options", storage_options)
 

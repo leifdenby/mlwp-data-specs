@@ -2,7 +2,7 @@
 
 [![Spec Docs](https://img.shields.io/badge/spec%20docs-HTML-blue)](https://leifdenby.github.io/mlwp-data-specs/)
 
-Trait-based dataset validator for weather/climate datasets in Zarr format.
+Trait-based dataset validator for weather/climate datasets.
 
 ## Why this was made
 
@@ -13,7 +13,7 @@ In summary, the goals of this project are to:
 
 1. make trait-level dataset requirements explicit (`time`, `space`, `uncertainty`)
 2. keep human-readable spec text and executable validation logic side-by-side
-3. provide both CLI and Python APIs for local and remote Zarr validation
+3. provide both CLI and Python APIs for local and remote dataset validation
 4. publish linkable HTML spec docs directly from the validator code
 
 ## When should you use this?
@@ -57,7 +57,12 @@ The repository is organized so spec text, checks, and interfaces are separated b
 
 ```text
 src/mlwp_data_specs/
-├── api.py                         # High-level Python API (validate_dataset)
+├── api.py                         # High-level Python API (validate_dataset, open_dataset)
+├── loaders/
+│   ├── core.py                    # Loader module import + open helpers
+│   └── anemoi/
+│       ├── anemoi_datasets.py     # Built-in hooks for anemoi-datasets stores
+│       └── anemoi_inference.py    # Built-in hooks for anemoi-inference outputs
 ├── specs/
 │   ├── cli.py                     # CLI entry point (mlwp.validate_dataset_traits)
 │   ├── reporting.py               # ValidationReport and check registry helpers
@@ -96,17 +101,68 @@ uv sync
 Run validation for selected traits:
 
 ```bash
-uv run mlwp.validate_dataset_traits <DATASET_PATH_OR_URL> --time forecast --space grid --uncertainty deterministic
+uv run mlwp.validate_dataset_traits <DATASET_PATH_OR_URL> [<DATASET_PATH_OR_URL> ...] --time forecast --space grid --uncertainty deterministic
 ```
+
+When the source data needs custom loading logic before validation, pass a loader module with `--loader`.
+The loader value must be either:
+
+- a Python file path ending in `.py`
+- a dotted Python module path
+
+The module may define a subset of the following:
+
+1. Variables defining how each provided path is opened with `xarray.open_dataset`
+   - `OPEN_KWARGS`: keyword arguments forwarded to `xarray.open_dataset`, including backend selection such as `{"engine": "zarr"}` or `{"engine": "h5netcdf"}`
+2. Functions and variables around preprocessing, concatenation, and postprocessing
+   - `preprocess(ds)`: normalize each opened source dataset before combination
+   - `CONCAT_DIM`: dimension used when combining multiple inputs; required if more than one path is provided
+   - `postprocess(ds)`: finalize the combined dataset before validation
+3. Variables defining valid trait profiles
+   - `valid_time_profiles`: allowed `time=` profile values for this loader
+   - `valid_space_profiles`: allowed `space=` profile values for this loader
+   - `valid_uncertainty_profiles`: allowed `uncertainty=` profile values for this loader
 
 Examples:
 
 ```bash
-# Validate a local Zarr dataset
+# Validate a local dataset
 uv run mlwp.validate_dataset_traits /path/to/dataset.zarr --time forecast --space grid
 
-# Validate a remote S3 dataset with anonymous access
+# Validate a remote S3 Zarr dataset with anonymous access
 uv run mlwp.validate_dataset_traits s3://bucket/dataset.zarr --time observation --space point --s3-anon
+
+# Validate with a built-in anemoi-datasets loader
+uv run mlwp.validate_dataset_traits \
+  /path/to/anemoi_dataset.zarr \
+  --loader mlwp_data_specs.loaders.anemoi.anemoi_datasets \
+  --time observation \
+  --space grid \
+  --uncertainty deterministic
+
+# Validate with a built-in anemoi-inference loader
+uv run mlwp.validate_dataset_traits \
+  /path/to/anemoi-inference-20260101T00.nc \
+  /path/to/anemoi-inference-20260102T00.nc \
+  /path/to/anemoi-inference-20260103T00.nc \
+  --loader mlwp_data_specs.loaders.anemoi.anemoi_inference \
+  --time forecast \
+  --space grid \
+  --uncertainty deterministic
+
+# Validate with a user-provided loader module file
+uv run mlwp.validate_dataset_traits \
+  /path/to/dataset.zarr \
+  --loader ./examples/user_loader.py \
+  --time forecast \
+  --space grid
+
+# Validate with a user-provided loader module path
+uv run mlwp.validate_dataset_traits \
+  /path/to/dataset.zarr \
+  --loader my_project.loaders.custom_loader \
+  --time forecast \
+  --space grid
 
 # List available trait values
 uv run mlwp.validate_dataset_traits --list-time
@@ -129,7 +185,7 @@ import xarray as xr
 from mlwp_data_specs import validate_dataset
 
 # Load dataset from local path or remote store
-ds = xr.open_zarr("/path/to/dataset.zarr")
+ds = xr.open_dataset("/path/to/dataset.nc")
 
 report = validate_dataset(
     ds,
@@ -148,6 +204,85 @@ The API also accepts the requested alias spelling:
 
 ```python
 report = validate_dataset(ds, time="forecast", space="grid", uncertaity="deterministic")
+```
+
+You can also let `mlwp-data-specs` open a dataset through a loader module:
+
+```python
+from mlwp_data_specs import open_dataset, validate_dataset
+
+ds = open_dataset(
+    [
+        "/path/to/anemoi-inference-20260101T00.nc",
+        "/path/to/anemoi-inference-20260102T00.nc",
+        "/path/to/anemoi-inference-20260103T00.nc",
+    ],
+    loader="mlwp_data_specs.loaders.anemoi.anemoi_inference",
+)
+
+report = validate_dataset(
+    ds,
+    time="forecast",
+    space="grid",
+    uncertainty="deterministic",
+)
+
+report.console_print()
+```
+
+For a single-store `anemoi-datasets` input:
+
+```python
+from mlwp_data_specs import open_dataset, validate_dataset
+
+ds = open_dataset(
+    "/path/to/anemoi_dataset.zarr",
+    loader="mlwp_data_specs.loaders.anemoi.anemoi_datasets",
+)
+
+report = validate_dataset(
+    ds,
+    time="observation",
+    space="grid",
+    uncertainty="deterministic",
+)
+
+report.console_print()
+```
+
+Or with a user-provided loader file:
+
+```python
+from mlwp_data_specs import open_dataset, validate_dataset
+
+ds = open_dataset(
+    "/path/to/dataset.zarr",
+    loader="./examples/user_loader.py",
+)
+
+report = validate_dataset(ds, time="forecast", space="grid")
+```
+
+A user loader module can define any subset of the following hooks:
+
+```python
+import xarray as xr
+
+OPEN_KWARGS = {}
+
+
+def preprocess(ds: xr.Dataset) -> xr.Dataset | xr.DataArray:
+    return ds
+
+
+CONCAT_DIM = "valid_time"
+valid_time_profiles = ("forecast",)
+valid_space_profiles = ("grid",)
+valid_uncertainty_profiles = ("deterministic",)
+
+
+def postprocess(ds: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
+    return ds
 ```
 
 ## Development
