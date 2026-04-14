@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-import xarray as xr
 from unittest.mock import patch
 
+import pytest
+import xarray as xr
+
 from mlwp_data_specs import validate_dataset
-from mlwp_data_specs.api import (
-    TIME_TRAIT_ATTR,
-    SPACE_TRAIT_ATTR,
-    UNCERTAINTY_TRAIT_ATTR,
-)
+from mlwp_data_specs.api import SPACE_TRAIT_ATTR, TIME_TRAIT_ATTR
 
 
 def _forecast_grid_ds() -> xr.Dataset:
