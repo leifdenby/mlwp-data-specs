@@ -71,9 +71,7 @@ def _coerce_enum(
 def _resolve_trait(
     ds: xr.Dataset,
     arg_value: EnumType | str | None,
-    attr_name: str,
     enum_cls: type[EnumType],
-    trait_name: str,
 ) -> EnumType | None:
     """Resolve a trait value from argument or dataset attributes.
 
@@ -83,18 +81,17 @@ def _resolve_trait(
         The dataset.
     arg_value : EnumType | str | None
         The trait value passed as an argument.
-    attr_name : str
-        The global attribute name to check.
     enum_cls : type[EnumType]
         The enum class for the trait.
-    trait_name : str
-        The name of the trait (for logging/errors).
 
     Returns
     -------
     EnumType | None
         The resolved trait value or ``None``.
     """
+    trait_name = enum_cls.__name__.lower()
+    attr_name = _TRAIT_ATTR_FORMAT.format(trait_name)
+
     arg_trait = _coerce_enum(arg_value, enum_cls, trait_name)
     attr_value = ds.attrs.get(attr_name)
 
@@ -157,11 +154,9 @@ def validate_dataset(
 
     uncertainty_value = uncertainty if uncertainty is not None else uncertaity
 
-    time_trait = _resolve_trait(ds, time, TIME_TRAIT_ATTR, Time, "time")
-    space_trait = _resolve_trait(ds, space, SPACE_TRAIT_ATTR, Space, "space")
-    uncertainty_trait = _resolve_trait(
-        ds, uncertainty_value, UNCERTAINTY_TRAIT_ATTR, Uncertainty, "uncertainty"
-    )
+    time_trait = _resolve_trait(ds, time, Time)
+    space_trait = _resolve_trait(ds, space, Space)
+    uncertainty_trait = _resolve_trait(ds, uncertainty_value, Uncertainty)
 
     if not any([time_trait, space_trait, uncertainty_trait]):
         raise ValueError("At least one trait must be selected")
