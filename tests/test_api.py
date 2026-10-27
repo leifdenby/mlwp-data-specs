@@ -78,8 +78,10 @@ def test_validate_dataset_attribute_mismatch_warning(mock_logger) -> None:
     # We pass time="forecast" to override the attribute
     report = validate_dataset(ds, time="forecast", space="grid")
 
-    # Should not fail because "forecast" is used for validation
+    # Should not fail because "forecast" is used for validation, but the
+    # mismatching attribute is reported as a warning
     assert not report.has_fails()
+    assert report.has_warnings()
 
     # Check that a warning was emitted
     mock_logger.warning.assert_called()
@@ -90,12 +92,14 @@ def test_validate_dataset_attribute_mismatch_warning(mock_logger) -> None:
 
 @patch("mlwp_data_specs.api.logger")
 def test_validate_dataset_invalid_attribute_warning(mock_logger) -> None:
-    """Invalid attribute value logs a warning and is ignored if valid arg provided."""
+    """Invalid attribute value logs a warning, falls back to the provided arg and
+    is reported as a failure."""
     ds = _forecast_grid_ds()
     ds.attrs[TIME_TRAIT_ATTR] = "invalid_time_trait"
 
     report = validate_dataset(ds, time="forecast", space="grid")
-    assert not report.has_fails()
+    failed = [r for r in report.results if r.status == "FAIL"]
+    assert [r.requirement for r in failed] == ["Global attribute 'mlwp_time_trait'"]
 
     mock_logger.warning.assert_called()
     warning_msg = mock_logger.warning.call_args[0][0]
