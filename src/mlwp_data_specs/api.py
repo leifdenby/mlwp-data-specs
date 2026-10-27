@@ -8,6 +8,7 @@ from typing import TypeVar
 import xarray as xr
 from loguru import logger
 
+from mlwp_data_specs.checks.global_attributes.traits import TRAIT_ATTR_FORMAT
 from mlwp_data_specs.specs.reporting import ValidationReport
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
     Space,
@@ -28,11 +29,9 @@ from mlwp_data_specs.specs.traits.uncertainty import (
     validate_dataset as validate_uncertainty,
 )
 
-_TRAIT_ATTR_FORMAT = "mlwp_{}_trait"
-
-TIME_TRAIT_ATTR = _TRAIT_ATTR_FORMAT.format("time")
-SPACE_TRAIT_ATTR = _TRAIT_ATTR_FORMAT.format("space")
-UNCERTAINTY_TRAIT_ATTR = _TRAIT_ATTR_FORMAT.format("uncertainty")
+TIME_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("time")
+SPACE_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("space")
+UNCERTAINTY_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("uncertainty")
 
 EnumType = TypeVar("EnumType", bound=Enum)
 
@@ -96,7 +95,7 @@ def _resolve_trait(
         The resolved trait value or ``None``.
     """
     trait_name = enum_cls.__name__.lower()
-    attr_name = _TRAIT_ATTR_FORMAT.format(trait_name)
+    attr_name = TRAIT_ATTR_FORMAT.format(trait_name)
 
     arg_trait = _coerce_enum(arg_value, enum_cls, trait_name)
     attr_value = ds.attrs.get(attr_name)

@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with array dimension axes.
 - Bumped the `spatial_coordinate` spec version to `0.1.1-draft` (wording: "spatial
   axis" → "spatial trait axis").
+- Trait specs now include a "Global Attributes" section: datasets MAY declare
+  `mlwp_{time,space,uncertainty}_trait`; if present the value MUST be a valid
+  profile (FAIL otherwise) and SHOULD match the validated profile (WARNING
+  otherwise). Previously invalid/mismatching values were only logged. All trait
+  spec versions are now `0.1.1-draft`.
 
 ## [0.1.0](https://github.com/mlwp-tools/mlwp-data-specs/releases/tag/v0.1.0)
 
