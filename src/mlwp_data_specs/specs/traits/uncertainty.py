@@ -7,10 +7,10 @@ from enum import Enum
 
 import xarray as xr
 
-from mlwp_data_specs.checks.metadata.coords import check_uncertainty_coordinate_metadata
-from mlwp_data_specs.checks.traits._common import (
-    check_dim_variants,
-    check_required_coords,
+from mlwp_data_specs.checks.coords.dimensions import check_dim_variants
+from mlwp_data_specs.checks.coords.names import check_required_coords
+from mlwp_data_specs.checks.coords.uncertainty import (
+    check_uncertainty_coordinate_metadata,
 )
 from mlwp_data_specs.specs.reporting import ValidationReport
 
@@ -73,17 +73,21 @@ def validate_dataset(
         spec_text += """
     - No uncertainty-specific dimensions are required for this profile.
     """
-        report += check_dim_variants(ds, axis="uncertainty", variants=[])
+        report += check_dim_variants(ds, trait_axis="uncertainty", variants=[])
     elif trait == Uncertainty.ENSEMBLE:
         spec_text += """
     - The dataset MUST include the `member` dimension for uncertainty realizations.
     """
-        report += check_dim_variants(ds, axis="uncertainty", variants=[{"member"}])
+        report += check_dim_variants(
+            ds, trait_axis="uncertainty", variants=[{"member"}]
+        )
     elif trait == Uncertainty.QUANTILE:
         spec_text += """
     - The dataset MUST include the `quantile` dimension for uncertainty representation.
     """
-        report += check_dim_variants(ds, axis="uncertainty", variants=[{"quantile"}])
+        report += check_dim_variants(
+            ds, trait_axis="uncertainty", variants=[{"quantile"}]
+        )
     else:
         raise NotImplementedError(f"Unsupported uncertainty trait: {trait!r}")
 
@@ -94,20 +98,22 @@ def validate_dataset(
         spec_text += """
     - This profile defines no required uncertainty coordinates.
     """
-        report += check_required_coords(ds, axis="uncertainty", required_coords=set())
+        report += check_required_coords(
+            ds, trait_axis="uncertainty", required_coords=set()
+        )
     elif trait == Uncertainty.ENSEMBLE:
         spec_text += """
     - The dataset MUST include the `member` coordinate.
     """
         report += check_required_coords(
-            ds, axis="uncertainty", required_coords={"member"}
+            ds, trait_axis="uncertainty", required_coords={"member"}
         )
     elif trait == Uncertainty.QUANTILE:
         spec_text += """
     - The dataset MUST include the `quantile` coordinate.
     """
         report += check_required_coords(
-            ds, axis="uncertainty", required_coords={"quantile"}
+            ds, trait_axis="uncertainty", required_coords={"quantile"}
         )
     else:
         raise NotImplementedError(f"Unsupported uncertainty trait: {trait!r}")

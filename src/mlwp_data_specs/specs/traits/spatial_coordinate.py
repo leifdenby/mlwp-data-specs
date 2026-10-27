@@ -7,14 +7,12 @@ from enum import Enum
 
 import xarray as xr
 
-from mlwp_data_specs.checks.metadata.coords import check_space_coordinate_metadata
-from mlwp_data_specs.checks.traits._common import (
-    check_dim_variants,
-    check_required_coords,
-)
+from mlwp_data_specs.checks.coords.dimensions import check_dim_variants
+from mlwp_data_specs.checks.coords.names import check_required_coords
+from mlwp_data_specs.checks.coords.spatial import check_space_coordinate_metadata
 from mlwp_data_specs.specs.reporting import ValidationReport
 
-VERSION = "0.1.0"
+VERSION = "0.1.1-draft"
 IDENTIFIER = "spatial_coordinate"
 
 
@@ -76,7 +74,7 @@ def validate_dataset(
     """
         report += check_dim_variants(
             ds,
-            axis="space",
+            trait_axis="space",
             variants=[
                 {"xc", "yc"},
                 {"grid_index"},
@@ -85,9 +83,9 @@ def validate_dataset(
         )
     elif trait == Space.POINT:
         spec_text += """
-    - The dataset MUST include the `point_index` dimension for the spatial axis.
+    - The dataset MUST include the `point_index` dimension for the spatial trait axis.
     """
-        report += check_dim_variants(ds, axis="space", variants=[{"point_index"}])
+        report += check_dim_variants(ds, trait_axis="space", variants=[{"point_index"}])
     else:
         raise NotImplementedError(f"Unsupported spatial trait: {trait!r}")
 
@@ -97,7 +95,7 @@ def validate_dataset(
     - The dataset MUST include the `latitude` and `longitude` coordinates.
     """
     report += check_required_coords(
-        ds, axis="space", required_coords={"longitude", "latitude"}
+        ds, trait_axis="space", required_coords={"longitude", "latitude"}
     )
 
     spec_text += """

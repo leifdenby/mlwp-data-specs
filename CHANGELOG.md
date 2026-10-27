@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Restructured `mlwp_data_specs.checks` to mirror xr.Dataset components (as in
+  `mlcast-dataset-validator`): `checks.traits._common` and `checks.metadata.coords`
+  are replaced by `checks.coords.{dimensions,names,spatial,temporal,uncertainty}`.
+- Renamed `AxisName` to `TraitAxis` and the `axis=` keyword of
+  `check_dim_variants`/`check_required_coords` to `trait_axis=`, to avoid confusion
+  with array dimension axes.
+- Bumped the `spatial_coordinate` spec version to `0.1.1-draft` (wording: "spatial
+  axis" → "spatial trait axis").
+
 ## [0.1.0](https://github.com/mlwp-tools/mlwp-data-specs/releases/tag/v0.1.0)
 
 First release of `mlwp-data-specs`, a trait-based dataset specification and

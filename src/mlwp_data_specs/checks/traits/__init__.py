@@ -1,1 +1,0 @@
-"""Trait-level structural checks."""

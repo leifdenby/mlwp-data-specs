@@ -70,11 +70,13 @@ src/mlwp_data_specs/
 │       ├── spatial_coordinate.py  # Space trait enum + specs + validation wiring
 │       ├── time_coordinate.py     # Time trait enum + specs + validation wiring
 │       └── uncertainty.py         # Uncertainty trait enum + specs + validation wiring
-├── checks/
-│   ├── traits/
-│   │   └── _common.py             # Shared structural check primitives
-│   └── metadata/
-│       └── coords.py              # standard_name/units/etc checks
+├── checks/                        # Subpackages mirror xr.Dataset components
+│   └── coords/
+│       ├── dimensions.py          # Allowed dimension variants
+│       ├── names.py               # Required coordinates and coordinate attributes
+│       ├── spatial.py             # Spatial coordinate metadata
+│       ├── temporal.py            # Time coordinate metadata
+│       └── uncertainty.py         # Uncertainty coordinate metadata
 ```
 
 ## Requirements

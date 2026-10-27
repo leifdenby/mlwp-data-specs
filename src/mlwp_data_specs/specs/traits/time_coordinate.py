@@ -7,11 +7,9 @@ from enum import Enum
 
 import xarray as xr
 
-from mlwp_data_specs.checks.metadata.coords import check_time_coordinate_metadata
-from mlwp_data_specs.checks.traits._common import (
-    check_dim_variants,
-    check_required_coords,
-)
+from mlwp_data_specs.checks.coords.dimensions import check_dim_variants
+from mlwp_data_specs.checks.coords.names import check_required_coords
+from mlwp_data_specs.checks.coords.temporal import check_time_coordinate_metadata
 from mlwp_data_specs.specs.reporting import ValidationReport
 
 VERSION = "0.1.0"
@@ -73,13 +71,13 @@ def validate_dataset(
     - The dataset MUST include both `reference_time` and `lead_time` dimensions.
     """
         report += check_dim_variants(
-            ds, axis="time", variants=[{"reference_time", "lead_time"}]
+            ds, trait_axis="time", variants=[{"reference_time", "lead_time"}]
         )
     elif trait == Time.OBSERVATION:
         spec_text += """
     - The dataset MUST include the `valid_time` dimension.
     """
-        report += check_dim_variants(ds, axis="time", variants=[{"valid_time"}])
+        report += check_dim_variants(ds, trait_axis="time", variants=[{"valid_time"}])
     else:
         raise NotImplementedError(f"Unsupported time trait: {trait!r}")
 
@@ -91,13 +89,15 @@ def validate_dataset(
     - The dataset MUST include the `lead_time` and `reference_time` coordinates.
     """
         report += check_required_coords(
-            ds, axis="time", required_coords={"reference_time", "lead_time"}
+            ds, trait_axis="time", required_coords={"reference_time", "lead_time"}
         )
     elif trait == Time.OBSERVATION:
         spec_text += """
     - The dataset MUST include the `valid_time` coordinate.
     """
-        report += check_required_coords(ds, axis="time", required_coords={"valid_time"})
+        report += check_required_coords(
+            ds, trait_axis="time", required_coords={"valid_time"}
+        )
     else:
         raise NotImplementedError(f"Unsupported time trait: {trait!r}")
 
