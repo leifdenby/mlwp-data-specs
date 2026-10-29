@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from enum import Enum
+from enum import StrEnum
 
 import xarray as xr
 
@@ -21,7 +21,7 @@ IDENTIFIER = "time_coordinate"
 TIME_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("time")
 
 
-class Time(str, Enum):
+class Time(StrEnum):
     """Supported temporal trait profiles."""
 
     FORECAST = "forecast"

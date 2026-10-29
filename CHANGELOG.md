@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   profile (FAIL otherwise) and SHOULD match the validated profile (WARNING
   otherwise). Previously invalid/mismatching values were only logged. All trait
   spec versions are now `0.1.1-draft`.
+- `Time`, `Space` and `Uncertainty` are now `StrEnum`s, so `str()` and f-strings
+  of a member give its value (`"forecast"`, not `"Time.FORECAST"`). A trait
+  attribute set to a member, as mlwp-data-loaders does, now passes the attribute
+  check.
 
 ## [0.1.0](https://github.com/mlwp-tools/mlwp-data-specs/releases/tag/v0.1.0)
 

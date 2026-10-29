@@ -10,6 +10,8 @@ import xarray as xr
 
 from mlwp_data_specs import __version__, validate_dataset
 from mlwp_data_specs.api import SPACE_TRAIT_ATTR, TIME_TRAIT_ATTR
+from mlwp_data_specs.specs.traits.spatial_coordinate import Space
+from mlwp_data_specs.specs.traits.time_coordinate import Time
 
 
 def _forecast_grid_ds() -> xr.Dataset:
@@ -104,3 +106,14 @@ def test_validate_dataset_invalid_attribute_warning(mock_logger) -> None:
     mock_logger.warning.assert_called()
     warning_msg = mock_logger.warning.call_args[0][0]
     assert "Invalid trait value in attribute 'mlwp_time_trait'" in warning_msg
+
+
+def test_validate_dataset_enum_member_attributes() -> None:
+    """Attributes set to trait enum members, as the loaders do, pass."""
+    ds = _forecast_grid_ds()
+    ds.attrs[TIME_TRAIT_ATTR] = Time.FORECAST
+    ds.attrs[SPACE_TRAIT_ATTR] = Space.GRID
+
+    report = validate_dataset(ds)
+    assert not report.has_fails()
+    assert not report.has_warnings()

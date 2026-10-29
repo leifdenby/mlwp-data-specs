@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from enum import Enum
+from enum import StrEnum
 
 import xarray as xr
 
@@ -23,7 +23,7 @@ IDENTIFIER = "uncertainty"
 UNCERTAINTY_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("uncertainty")
 
 
-class Uncertainty(str, Enum):
+class Uncertainty(StrEnum):
     """Supported uncertainty trait profiles."""
 
     DETERMINISTIC = "deterministic"

@@ -16,6 +16,8 @@ from mlwp_data_specs.specs.traits.time_coordinate import Time
         ({"mlwp_time_trait": "forecast"}, "PASS"),
         ({"mlwp_time_trait": "observation"}, "WARNING"),
         ({"mlwp_time_trait": "nowcast"}, "FAIL"),
+        ({"mlwp_time_trait": Time.FORECAST}, "PASS"),
+        ({"mlwp_time_trait": Time.OBSERVATION}, "WARNING"),
     ],
 )
 def test_check_trait_attribute(attrs: dict[str, str], expected_status: str) -> None:
