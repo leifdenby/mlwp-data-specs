@@ -24,7 +24,8 @@ Guidance for agents and contributors working in this repository.
 ## Structure
 
 - Trait specs: `src/mlwp_data_specs/specs/traits/`
-- Shared checks: `src/mlwp_data_specs/checks/`
+- Shared checks: `src/mlwp_data_specs/checks/` (subpackages mirror xr.Dataset
+  components, e.g. `checks/coords/`; add `data_vars/`, `global_attributes/` as needed)
 - CLI/reporting: `src/mlwp_data_specs/specs/`
 - Docs generator: `docs/scripts/generate_trait_docs.py`
 
