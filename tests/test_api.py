@@ -10,6 +10,7 @@ import xarray as xr
 
 from mlwp_data_specs import __version__, validate_dataset
 from mlwp_data_specs.api import SPACE_TRAIT_ATTR, TIME_TRAIT_ATTR
+from mlwp_data_specs.trait_profiles import Space, Time
 
 
 def _forecast_grid_ds() -> xr.Dataset:
@@ -43,7 +44,7 @@ def _forecast_grid_ds() -> xr.Dataset:
 
 def test_validate_dataset_accepts_string_traits() -> None:
     """API accepts string trait selectors and returns a passing report."""
-    report = validate_dataset(_forecast_grid_ds(), time="forecast", space="grid")
+    report = validate_dataset(_forecast_grid_ds(), time=Time.FORECAST, space=Space.GRID)
     assert not report.has_fails()
 
 
@@ -61,8 +62,8 @@ def test_validate_dataset_requires_trait() -> None:
 def test_validate_dataset_from_attributes() -> None:
     """Traits can be loaded from global dataset attributes."""
     ds = _forecast_grid_ds()
-    ds.attrs[TIME_TRAIT_ATTR] = "forecast"
-    ds.attrs[SPACE_TRAIT_ATTR] = "grid"
+    ds.attrs[TIME_TRAIT_ATTR] = Time.FORECAST
+    ds.attrs[SPACE_TRAIT_ATTR] = Space.GRID
 
     report = validate_dataset(ds)
     assert not report.has_fails()
@@ -72,20 +73,20 @@ def test_validate_dataset_from_attributes() -> None:
 def test_validate_dataset_attribute_mismatch_warning(mock_logger) -> None:
     """Mismatch between provided argument and attribute logs a warning."""
     ds = _forecast_grid_ds()
-    # The dataset has forecast coords, but we put "observation" in the attribute
-    ds.attrs[TIME_TRAIT_ATTR] = "observation"
+    # The dataset has forecast coords, but we put observation in the attribute
+    ds.attrs[TIME_TRAIT_ATTR] = Time.OBSERVATION
 
-    # We pass time="forecast" to override the attribute
-    report = validate_dataset(ds, time="forecast", space="grid")
+    # We pass time=Time.FORECAST to override the attribute
+    report = validate_dataset(ds, time=Time.FORECAST, space=Space.GRID)
 
-    # Should not fail because "forecast" is used for validation
+    # Should not fail because forecast is used for validation
     assert not report.has_fails()
 
     # Check that a warning was emitted
     mock_logger.warning.assert_called()
     warning_msg = mock_logger.warning.call_args[0][0]
-    assert "Provided time trait 'forecast' differs" in warning_msg
-    assert "attribute 'mlwp_time_trait' ('observation')" in warning_msg
+    assert f"Provided time trait '{Time.FORECAST}' differs" in warning_msg
+    assert f"attribute '{TIME_TRAIT_ATTR}' ('{Time.OBSERVATION}')" in warning_msg
 
 
 @patch("mlwp_data_specs.api.logger")
@@ -94,7 +95,7 @@ def test_validate_dataset_invalid_attribute_warning(mock_logger) -> None:
     ds = _forecast_grid_ds()
     ds.attrs[TIME_TRAIT_ATTR] = "invalid_time_trait"
 
-    report = validate_dataset(ds, time="forecast", space="grid")
+    report = validate_dataset(ds, time=Time.FORECAST, space=Space.GRID)
     assert not report.has_fails()
 
     mock_logger.warning.assert_called()

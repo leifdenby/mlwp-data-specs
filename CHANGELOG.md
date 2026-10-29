@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with array dimension axes.
 - Bumped the `spatial_coordinate` spec version to `0.1.1-draft` (wording: "spatial
   axis" → "spatial trait axis").
+- Trait profile classes `Space`, `Time` and `Uncertainty` are now `StrEnumLike`
+  classes (defined in `mlwp_data_specs.trait_profiles`, still importable from the
+  trait spec modules) instead of `enum.Enum`s. Their members are plain `str`, so
+  they can be set as dataset attributes (e.g. `mlwp_space_trait`) and saved to
+  netCDF/zarr without casting. Usage like `Space.GRID` is unchanged. **Upgrade
+  note**, only for enum-specific usage: `.value`/`.name` and construction such as
+  `Space("grid")` no longer exist (use `Space.GRID`, or `value in Space` to
+  check a string), `isinstance(x, Space)` no longer holds, and `str(Space.GRID)`
+  is now `"grid"` rather than `"Space.GRID"`.
+  [\#PR](https://github.com/mlwp-tools/mlwp-data-specs/pull/PR), @leifdenby
 
 ## [0.1.0](https://github.com/mlwp-tools/mlwp-data-specs/releases/tag/v0.1.0)
 

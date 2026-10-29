@@ -6,21 +6,19 @@ import xarray as xr
 
 from mlwp_data_specs.checks.coords.names import check_coordinate_attrs
 from mlwp_data_specs.specs.reporting import ValidationReport, log_function_call
+from mlwp_data_specs.trait_profiles import Space
 
 
 @log_function_call
-def check_space_coordinate_metadata(
-    ds: xr.Dataset, *, trait: object
-) -> ValidationReport:
+def check_space_coordinate_metadata(ds: xr.Dataset, *, trait: str) -> ValidationReport:
     """Validate coordinate metadata for the selected space trait.
 
     Parameters
     ----------
     ds : xr.Dataset
         Dataset being validated.
-    trait : object
-        Selected space profile enum instance (or enum-like object with a
-        ``value`` attribute).
+    trait : str
+        Selected space profile, one of the `Space` members.
 
     Returns
     -------
@@ -40,8 +38,7 @@ def check_space_coordinate_metadata(
             "units": {"degrees_north"},
         },
     }
-    trait_value = str(getattr(trait, "value", trait))
-    if trait_value == "grid":
+    if trait == Space.GRID:
         expectations.update(
             {
                 "xc": {

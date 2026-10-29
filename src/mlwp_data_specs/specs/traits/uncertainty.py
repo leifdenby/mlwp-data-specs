@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from enum import Enum
 
 import xarray as xr
 
@@ -13,21 +12,16 @@ from mlwp_data_specs.checks.coords.uncertainty import (
     check_uncertainty_coordinate_metadata,
 )
 from mlwp_data_specs.specs.reporting import ValidationReport
+from mlwp_data_specs.trait_profiles import Uncertainty
+
+__all__ = ["IDENTIFIER", "VERSION", "Uncertainty", "validate_dataset"]
 
 VERSION = "0.1.0"
 IDENTIFIER = "uncertainty"
 
 
-class Uncertainty(str, Enum):
-    """Supported uncertainty trait profiles."""
-
-    DETERMINISTIC = "deterministic"
-    ENSEMBLE = "ensemble"
-    QUANTILE = "quantile"
-
-
 def validate_dataset(
-    ds: xr.Dataset | None, *, trait: Uncertainty
+    ds: xr.Dataset | None, *, trait: str
 ) -> tuple[ValidationReport, str]:
     """Validate a dataset against the selected uncertainty trait specification.
 
@@ -36,8 +30,8 @@ def validate_dataset(
     ds : xr.Dataset | None
         Dataset to validate. ``None`` is only supported when checks are disabled
         (e.g. docs rendering mode via ``skip_all_checks``).
-    trait : Uncertainty
-        Selected uncertainty trait profile.
+    trait : str
+        Selected uncertainty trait profile, one of the `Uncertainty` members.
 
     Returns
     -------
@@ -50,7 +44,7 @@ def validate_dataset(
     ---
     version: {VERSION}
     trait: {IDENTIFIER}
-    profile: {trait.value}
+    profile: {trait}
     ---
 
     ## 1. Introduction
@@ -63,7 +57,7 @@ def validate_dataset(
     ## 2. Scope
 
     This specification applies to datasets validated with the
-    `uncertainty={trait.value}` profile.
+    `uncertainty={trait}` profile.
 
     ## 3. Structural Requirements
 
