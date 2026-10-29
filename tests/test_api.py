@@ -108,6 +108,17 @@ def test_validate_dataset_invalid_attribute_warning(mock_logger) -> None:
     assert "Invalid trait value in attribute 'mlwp_time_trait'" in warning_msg
 
 
+def test_validate_dataset_invalid_attribute_unvalidated_trait() -> None:
+    """Invalid attribute is reported as a failure even when its trait is not
+    validated."""
+    ds = _forecast_grid_ds()
+    ds.attrs[TIME_TRAIT_ATTR] = "invalid_time_trait"
+
+    report = validate_dataset(ds, space="grid")
+    failed = [r for r in report.results if r.status == "FAIL"]
+    assert [r.requirement for r in failed] == ["Global attribute 'mlwp_time_trait'"]
+
+
 def test_validate_dataset_enum_member_attributes() -> None:
     """Attributes set to trait enum members, as the loaders do, pass."""
     ds = _forecast_grid_ds()

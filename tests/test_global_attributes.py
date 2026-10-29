@@ -23,7 +23,27 @@ from mlwp_data_specs.specs.traits.time_coordinate import Time
 def test_check_trait_attribute(attrs: dict[str, str], expected_status: str) -> None:
     """Absent or matching attributes pass, mismatches warn, invalid values fail."""
     ds = xr.Dataset(attrs=attrs)
-    report = check_trait_attribute(ds, trait_axis="time", trait=Time.FORECAST)
+    report = check_trait_attribute(
+        ds, trait_axis="time", enum_cls=Time, trait=Time.FORECAST
+    )
 
     assert [r.status for r in report.results] == [expected_status]
     assert report.results[0].section == "Time Coordinate"
+
+
+@pytest.mark.parametrize(
+    ("attrs", "expected_status"),
+    [
+        ({}, "PASS"),
+        ({"mlwp_time_trait": "observation"}, "PASS"),
+        ({"mlwp_time_trait": "nowcast"}, "FAIL"),
+    ],
+)
+def test_check_trait_attribute_without_profile(
+    attrs: dict[str, str], expected_status: str
+) -> None:
+    """Without a validated profile, any valid profile value passes."""
+    ds = xr.Dataset(attrs=attrs)
+    report = check_trait_attribute(ds, trait_axis="time", enum_cls=Time)
+
+    assert [r.status for r in report.results] == [expected_status]

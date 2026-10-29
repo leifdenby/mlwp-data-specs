@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `mlwp_{time,space,uncertainty}_trait`; if present the value MUST be a valid
   profile (FAIL otherwise) and SHOULD match the validated profile (WARNING
   otherwise). Previously invalid/mismatching values were only logged. All trait
-  spec versions are now `0.1.1-draft`.
+  spec versions are now `0.1.1-draft`. `validate_dataset` also reports an invalid
+  value for a trait it does not validate.
 - `Time`, `Space` and `Uncertainty` are now `StrEnum`s, so `str()` and f-strings
   of a member give its value (`"forecast"`, not `"Time.FORECAST"`). A trait
   attribute set to a member, as mlwp-data-loaders does, now passes the attribute

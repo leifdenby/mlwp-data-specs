@@ -163,6 +163,8 @@ def validate_dataset(
     - If present, `{UNCERTAINTY_TRAIT_ATTR}` SHOULD equal `{trait.value}`, the
       profile being validated.
     """
-    report += check_trait_attribute(ds, trait_axis="uncertainty", trait=trait)
+    report += check_trait_attribute(
+        ds, trait_axis="uncertainty", enum_cls=Uncertainty, trait=trait
+    )
 
     return report, textwrap.dedent(spec_text)
