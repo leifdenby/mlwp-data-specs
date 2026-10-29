@@ -14,27 +14,26 @@ from mlwp_data_specs.checks.global_attributes.traits import (
 )
 from mlwp_data_specs.specs.reporting import ValidationReport
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
+    SPACE_TRAIT_ATTR,
     Space,
 )
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
     validate_dataset as validate_space,
 )
 from mlwp_data_specs.specs.traits.time_coordinate import (
+    TIME_TRAIT_ATTR,
     Time,
 )
 from mlwp_data_specs.specs.traits.time_coordinate import (
     validate_dataset as validate_time,
 )
 from mlwp_data_specs.specs.traits.uncertainty import (
+    UNCERTAINTY_TRAIT_ATTR,
     Uncertainty,
 )
 from mlwp_data_specs.specs.traits.uncertainty import (
     validate_dataset as validate_uncertainty,
 )
-
-TIME_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("time")
-SPACE_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("space")
-UNCERTAINTY_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("uncertainty")
 
 EnumType = TypeVar("EnumType", bound=Enum)
 
