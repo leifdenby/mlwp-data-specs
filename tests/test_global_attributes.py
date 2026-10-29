@@ -6,25 +6,29 @@ import pytest
 import xarray as xr
 
 from mlwp_data_specs.checks.global_attributes.traits import check_trait_attribute
-from mlwp_data_specs.specs.traits.time_coordinate import Time
+from mlwp_data_specs.specs.traits.time_coordinate import TIME_TRAIT_ATTR
+from mlwp_data_specs.trait_profiles import Time
 
 
 @pytest.mark.parametrize(
     ("attrs", "expected_status"),
     [
         ({}, "PASS"),
-        ({"mlwp_time_trait": "forecast"}, "PASS"),
-        ({"mlwp_time_trait": "observation"}, "WARNING"),
-        ({"mlwp_time_trait": "nowcast"}, "FAIL"),
-        # enum members, as set by mlwp-data-loaders, are accepted like strings
-        ({"mlwp_time_trait": Time.FORECAST}, "PASS"),
-        ({"mlwp_time_trait": Time.OBSERVATION}, "WARNING"),
+        ({TIME_TRAIT_ATTR: Time.FORECAST}, "PASS"),
+        ({TIME_TRAIT_ATTR: Time.OBSERVATION}, "WARNING"),
+        ({TIME_TRAIT_ATTR: "nowcast"}, "FAIL"),
     ],
 )
-def test_check_trait_attribute(
-    attrs: dict[str, str | Time], expected_status: str
-) -> None:
-    """Absent or matching attributes pass, mismatches warn, invalid values fail."""
+def test_check_trait_attribute(attrs: dict[str, str], expected_status: str) -> None:
+    """Absent or matching attributes pass, mismatches warn, invalid values fail.
+
+    Parameters
+    ----------
+    attrs : dict[str, str]
+        Global attributes of the test dataset.
+    expected_status : str
+        Expected status of the single reported result.
+    """
     ds = xr.Dataset(attrs=attrs)
     report = check_trait_attribute(
         ds, trait_axis="time", trait_cls=Time, trait=Time.FORECAST
@@ -37,15 +41,22 @@ def test_check_trait_attribute(
 @pytest.mark.parametrize(
     ("attrs", "expected_status"),
     [
-        ({"mlwp_time_trait": "observation"}, "PASS"),
-        ({"mlwp_time_trait": Time.OBSERVATION}, "PASS"),
-        ({"mlwp_time_trait": "nowcast"}, "FAIL"),
+        ({TIME_TRAIT_ATTR: Time.OBSERVATION}, "PASS"),
+        ({TIME_TRAIT_ATTR: "nowcast"}, "FAIL"),
     ],
 )
 def test_check_trait_attribute_without_trait(
-    attrs: dict[str, str | Time], expected_status: str
+    attrs: dict[str, str], expected_status: str
 ) -> None:
-    """Without a validated profile, only the validity of the value is checked."""
+    """Without a validated profile, only the validity of the value is checked.
+
+    Parameters
+    ----------
+    attrs : dict[str, str]
+        Global attributes of the test dataset.
+    expected_status : str
+        Expected status of the single reported result.
+    """
     ds = xr.Dataset(attrs=attrs)
     report = check_trait_attribute(ds, trait_axis="time", trait_cls=Time)
 

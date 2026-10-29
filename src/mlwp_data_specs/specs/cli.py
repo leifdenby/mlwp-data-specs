@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Sequence
-from enum import Enum
-from typing import TypeVar
 
 import xarray as xr
 from loguru import logger
@@ -13,41 +11,31 @@ from loguru import logger
 from mlwp_data_specs import __version__
 from mlwp_data_specs.specs.reporting import ValidationReport, skip_all_checks
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
-    Space,
-)
-from mlwp_data_specs.specs.traits.spatial_coordinate import (
     validate_dataset as validate_space,
-)
-from mlwp_data_specs.specs.traits.time_coordinate import (
-    Time,
 )
 from mlwp_data_specs.specs.traits.time_coordinate import (
     validate_dataset as validate_time,
 )
 from mlwp_data_specs.specs.traits.uncertainty import (
-    Uncertainty,
-)
-from mlwp_data_specs.specs.traits.uncertainty import (
     validate_dataset as validate_uncertainty,
 )
+from mlwp_data_specs.trait_profiles import Space, StrEnumLike, Time, Uncertainty
 
-EnumType = TypeVar("EnumType", bound=Enum)
 
-
-def _choice_values(enum_cls: type[EnumType]) -> list[str]:
-    """List sorted enum values for CLI `choices`.
+def _choice_values(profiles_cls: type[StrEnumLike]) -> list[str]:
+    """List sorted trait profile values for CLI `choices`.
 
     Parameters
     ----------
-    enum_cls : type[Enum]
-        Enum class with string values.
+    profiles_cls : type[StrEnumLike]
+        Class listing the supported profiles for a trait axis.
 
     Returns
     -------
     list[str]
-        Sorted enum values.
+        Sorted profile values.
     """
-    return sorted(item.value for item in enum_cls)
+    return sorted(profiles_cls)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -119,9 +107,9 @@ def _print_list(title: str, values: list[str]) -> None:
 def _run_selected_validations(
     ds: xr.Dataset | None,
     *,
-    space: Space | None,
-    time: Time | None,
-    uncertainty: Uncertainty | None,
+    space: str | None,
+    time: str | None,
+    uncertainty: str | None,
 ) -> tuple[ValidationReport, list[str]]:
     """Run validations for all selected traits.
 
@@ -130,12 +118,12 @@ def _run_selected_validations(
     ds : xr.Dataset | None
         Dataset to validate. May be ``None`` when checks are patched out in
         markdown rendering mode.
-    space : Space | None
-        Selected space profile.
-    time : Time | None
-        Selected time profile.
-    uncertainty : Uncertainty | None
-        Selected uncertainty profile.
+    space : str | None
+        Selected space profile, one of the `Space` members.
+    time : str | None
+        Selected time profile, one of the `Time` members.
+    uncertainty : str | None
+        Selected uncertainty profile, one of the `Uncertainty` members.
 
     Returns
     -------
@@ -190,9 +178,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         _print_list("Supported uncertainty traits:", _choice_values(Uncertainty))
         return 0
 
-    space = Space(args.space) if args.space else None
-    time = Time(args.time) if args.time else None
-    uncertainty = Uncertainty(args.uncertainty) if args.uncertainty else None
+    # values are already validated against the profiles by argparse `choices`
+    space = args.space
+    time = args.time
+    uncertainty = args.uncertainty
 
     if not any([space, time, uncertainty]):
         parser.error(

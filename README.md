@@ -63,13 +63,14 @@ The repository is organized so spec text, checks, and interfaces are separated b
 ```text
 src/mlwp_data_specs/
 ├── api.py                         # High-level Python API (validate_dataset)
+├── trait_profiles.py              # Supported trait profiles (Space, Time, Uncertainty)
 ├── specs/
 │   ├── cli.py                     # CLI entry point (mlwp.validate_dataset_traits)
 │   ├── reporting.py               # ValidationReport and check registry helpers
 │   └── traits/
-│       ├── spatial_coordinate.py  # Space trait enum + specs + validation wiring
-│       ├── time_coordinate.py     # Time trait enum + specs + validation wiring
-│       └── uncertainty.py         # Uncertainty trait enum + specs + validation wiring
+│       ├── spatial_coordinate.py  # Space trait specs + validation wiring
+│       ├── time_coordinate.py     # Time trait specs + validation wiring
+│       └── uncertainty.py         # Uncertainty trait specs + validation wiring
 ├── checks/                        # Subpackages mirror xr.Dataset components
 │   ├── coords/
 │   │   ├── dimensions.py          # Allowed dimension variants
@@ -136,15 +137,16 @@ Use the high-level API:
 ```python
 import xarray as xr
 from mlwp_data_specs import validate_dataset
+from mlwp_data_specs.trait_profiles import Space, Time, Uncertainty
 
 # Load dataset from local path or remote store
 ds = xr.open_zarr("/path/to/dataset.zarr")
 
 report = validate_dataset(
     ds,
-    time="forecast",
-    space="grid",
-    uncertainty="deterministic",
+    time=Time.FORECAST,
+    space=Space.GRID,
+    uncertainty=Uncertainty.DETERMINISTIC,
 )
 
 report.console_print()

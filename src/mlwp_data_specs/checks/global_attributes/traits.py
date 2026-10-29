@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from enum import Enum
-
 import xarray as xr
 
 from mlwp_data_specs.checks import SECTION_MAP, TraitAxis
 from mlwp_data_specs.specs.reporting import ValidationReport, log_function_call
+from mlwp_data_specs.trait_profiles import StrEnumLike
 
 TRAIT_ATTR_FORMAT = "mlwp_{}_trait"
 
@@ -17,13 +16,10 @@ def check_trait_attribute(
     ds: xr.Dataset,
     *,
     trait_axis: TraitAxis,
-    trait_cls: type[Enum],
-    trait: Enum | None = None,
+    trait_cls: type[StrEnumLike],
+    trait: str | None = None,
 ) -> ValidationReport:
     """Validate the optional global attribute declaring a trait profile.
-
-    The attribute value may be a plain string or a ``trait_cls`` member; both
-    are parsed with ``trait_cls``, as when resolving traits from attributes.
 
     Parameters
     ----------
@@ -32,11 +28,12 @@ def check_trait_attribute(
     trait_axis : TraitAxis
         Trait axis key, used to build the attribute name (e.g.
         ``mlwp_time_trait``).
-    trait_cls : type[Enum]
-        Enum of valid profiles for this trait axis.
-    trait : Enum | None, optional
-        Trait profile the dataset is being validated against. If ``None``, only
-        the validity of the attribute value is checked.
+    trait_cls : type[StrEnumLike]
+        Class listing the valid profiles for this trait axis.
+    trait : str | None, optional
+        Trait profile the dataset is being validated against, one of the
+        ``trait_cls`` members. If ``None``, only the validity of the attribute
+        value is checked.
 
     Returns
     -------
@@ -55,33 +52,24 @@ def check_trait_attribute(
         report.add(section, requirement, "PASS", "Optional attribute not set")
         return report
 
-    try:
-        attr_trait = trait_cls(value)
-    except ValueError:
-        allowed = [item.value for item in trait_cls]
+    if value not in trait_cls:
         report.add(
             section,
             requirement,
             "FAIL",
-            f"Value '{value}' is not one of {allowed}",
+            f"Value '{value}' is not one of {list(trait_cls)}",
         )
         return report
 
     if trait is None:
-        report.add(section, requirement, "PASS", f"Value '{attr_trait.value}' is valid")
-    elif attr_trait != trait:
+        report.add(section, requirement, "PASS", f"Value '{value}' is valid")
+    elif value != trait:
         report.add(
             section,
             requirement,
             "WARNING",
-            f"Value '{attr_trait.value}' differs from validated profile "
-            f"'{trait.value}'",
+            f"Value '{value}' differs from validated profile '{trait}'",
         )
     else:
-        report.add(
-            section,
-            requirement,
-            "PASS",
-            f"Value '{attr_trait.value}' matches profile",
-        )
+        report.add(section, requirement, "PASS", f"Value '{value}' matches profile")
     return report

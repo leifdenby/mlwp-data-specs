@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from enum import StrEnum
 
 import xarray as xr
 
@@ -15,21 +14,17 @@ from mlwp_data_specs.checks.global_attributes.traits import (
     check_trait_attribute,
 )
 from mlwp_data_specs.specs.reporting import ValidationReport
+from mlwp_data_specs.trait_profiles import Space
+
+__all__ = ["IDENTIFIER", "SPACE_TRAIT_ATTR", "VERSION", "Space", "validate_dataset"]
 
 VERSION = "0.1.1-draft"
 IDENTIFIER = "spatial_coordinate"
 SPACE_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("space")
 
 
-class Space(StrEnum):
-    """Supported spatial trait profiles."""
-
-    GRID = "grid"
-    POINT = "point"
-
-
 def validate_dataset(
-    ds: xr.Dataset | None, *, trait: Space
+    ds: xr.Dataset | None, *, trait: str
 ) -> tuple[ValidationReport, str]:
     """Validate a dataset against the selected space trait specification.
 
@@ -38,8 +33,8 @@ def validate_dataset(
     ds : xr.Dataset | None
         Dataset to validate. ``None`` is only supported when checks are disabled
         (e.g. docs rendering mode via ``skip_all_checks``).
-    trait : Space
-        Selected space trait profile.
+    trait : str
+        Selected space trait profile, one of the `Space` members.
 
     Returns
     -------
@@ -52,7 +47,7 @@ def validate_dataset(
     ---
     version: {VERSION}
     trait: {IDENTIFIER}
-    profile: {trait.value}
+    profile: {trait}
     ---
 
     ## 1. Introduction
@@ -64,7 +59,7 @@ def validate_dataset(
 
     ## 2. Scope
 
-    This specification applies to datasets validated with the `space={trait.value}`
+    This specification applies to datasets validated with the `space={trait}`
     profile.
 
     ## 3. Structural Requirements
@@ -146,14 +141,14 @@ def validate_dataset(
 
     report += check_space_coordinate_metadata(ds, trait=trait)
 
-    allowed = ", ".join(f"`{item.value}`" for item in Space)
+    allowed = ", ".join(f"`{profile}`" for profile in Space)
     spec_text += f"""
     ## 5. Global Attributes
 
     - The dataset MAY include the global attribute `{SPACE_TRAIT_ATTR}` to declare its
       spatial trait profile.
     - If present, `{SPACE_TRAIT_ATTR}` MUST be one of: {allowed}.
-    - If present, `{SPACE_TRAIT_ATTR}` SHOULD equal `{trait.value}`, the profile being
+    - If present, `{SPACE_TRAIT_ATTR}` SHOULD equal `{trait}`, the profile being
       validated.
     - The requirement on the value of `{SPACE_TRAIT_ATTR}` applies to any dataset
       that carries the attribute, including datasets validated only against other

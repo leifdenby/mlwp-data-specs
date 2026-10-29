@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from enum import StrEnum
 
 import xarray as xr
 
@@ -15,21 +14,17 @@ from mlwp_data_specs.checks.global_attributes.traits import (
     check_trait_attribute,
 )
 from mlwp_data_specs.specs.reporting import ValidationReport
+from mlwp_data_specs.trait_profiles import Time
+
+__all__ = ["IDENTIFIER", "TIME_TRAIT_ATTR", "VERSION", "Time", "validate_dataset"]
 
 VERSION = "0.1.1-draft"
 IDENTIFIER = "time_coordinate"
 TIME_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("time")
 
 
-class Time(StrEnum):
-    """Supported temporal trait profiles."""
-
-    FORECAST = "forecast"
-    OBSERVATION = "observation"
-
-
 def validate_dataset(
-    ds: xr.Dataset | None, *, trait: Time
+    ds: xr.Dataset | None, *, trait: str
 ) -> tuple[ValidationReport, str]:
     """Validate a dataset against the selected time trait specification.
 
@@ -38,8 +33,8 @@ def validate_dataset(
     ds : xr.Dataset | None
         Dataset to validate. ``None`` is only supported when checks are disabled
         (e.g. docs rendering mode via ``skip_all_checks``).
-    trait : Time
-        Selected time trait profile.
+    trait : str
+        Selected time trait profile, one of the `Time` members.
 
     Returns
     -------
@@ -52,7 +47,7 @@ def validate_dataset(
     ---
     version: {VERSION}
     trait: {IDENTIFIER}
-    profile: {trait.value}
+    profile: {trait}
     ---
 
     ## 1. Introduction
@@ -64,7 +59,7 @@ def validate_dataset(
 
     ## 2. Scope
 
-    This specification applies to datasets validated with the `time={trait.value}`
+    This specification applies to datasets validated with the `time={trait}`
     profile.
 
     ## 3. Structural Requirements
@@ -141,14 +136,14 @@ def validate_dataset(
 
     report += check_time_coordinate_metadata(ds, trait=trait)
 
-    allowed = ", ".join(f"`{item.value}`" for item in Time)
+    allowed = ", ".join(f"`{profile}`" for profile in Time)
     spec_text += f"""
     ## 5. Global Attributes
 
     - The dataset MAY include the global attribute `{TIME_TRAIT_ATTR}` to declare its
       time trait profile.
     - If present, `{TIME_TRAIT_ATTR}` MUST be one of: {allowed}.
-    - If present, `{TIME_TRAIT_ATTR}` SHOULD equal `{trait.value}`, the profile being
+    - If present, `{TIME_TRAIT_ATTR}` SHOULD equal `{trait}`, the profile being
       validated.
     - The requirement on the value of `{TIME_TRAIT_ATTR}` applies to any dataset
       that carries the attribute, including datasets validated only against other
