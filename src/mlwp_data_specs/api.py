@@ -8,30 +8,32 @@ from typing import TypeVar
 import xarray as xr
 from loguru import logger
 
-from mlwp_data_specs.checks.global_attributes.traits import TRAIT_ATTR_FORMAT
+from mlwp_data_specs.checks.global_attributes.traits import (
+    TRAIT_ATTR_FORMAT,
+    check_trait_attribute,
+)
 from mlwp_data_specs.specs.reporting import ValidationReport
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
+    SPACE_TRAIT_ATTR,
     Space,
 )
 from mlwp_data_specs.specs.traits.spatial_coordinate import (
     validate_dataset as validate_space,
 )
 from mlwp_data_specs.specs.traits.time_coordinate import (
+    TIME_TRAIT_ATTR,
     Time,
 )
 from mlwp_data_specs.specs.traits.time_coordinate import (
     validate_dataset as validate_time,
 )
 from mlwp_data_specs.specs.traits.uncertainty import (
+    UNCERTAINTY_TRAIT_ATTR,
     Uncertainty,
 )
 from mlwp_data_specs.specs.traits.uncertainty import (
     validate_dataset as validate_uncertainty,
 )
-
-TIME_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("time")
-SPACE_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("space")
-UNCERTAINTY_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("uncertainty")
 
 EnumType = TypeVar("EnumType", bound=Enum)
 
@@ -132,7 +134,9 @@ def validate_dataset(
     If a trait is not explicitly provided as an argument, this function
     will attempt to resolve it from the dataset's attributes (e.g.,
     ``mlwp_time_trait``, ``mlwp_space_trait``, ``mlwp_uncertainty_trait``).
-    If both are provided and differ, the argument takes precedence.
+    If both are provided and differ, the argument takes precedence. An
+    attribute that is set but is not a valid profile is reported as a failure,
+    even for a trait that is not validated.
 
     Parameters
     ----------
@@ -176,5 +180,17 @@ def validate_dataset(
     if uncertainty_trait is not None:
         trait_report, _ = validate_uncertainty(ds, trait=uncertainty_trait)
         report += trait_report
+
+    # An invalid attribute leaves its trait unresolved unless the trait was also
+    # passed as an argument, so the trait spec above never checked it.
+    for trait_axis, attr_name, enum_cls, trait in (
+        ("time", TIME_TRAIT_ATTR, Time, time_trait),
+        ("space", SPACE_TRAIT_ATTR, Space, space_trait),
+        ("uncertainty", UNCERTAINTY_TRAIT_ATTR, Uncertainty, uncertainty_trait),
+    ):
+        if trait is None and ds.attrs.get(attr_name) is not None:
+            report += check_trait_attribute(
+                ds, trait_axis=trait_axis, enum_cls=enum_cls
+            )
 
     return report

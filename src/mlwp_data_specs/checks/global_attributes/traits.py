@@ -17,7 +17,8 @@ def check_trait_attribute(
     ds: xr.Dataset,
     *,
     trait_axis: TraitAxis,
-    trait: Enum,
+    enum_cls: type[Enum],
+    trait: Enum | None = None,
 ) -> ValidationReport:
     """Validate the optional global attribute declaring a trait profile.
 
@@ -28,8 +29,12 @@ def check_trait_attribute(
     trait_axis : TraitAxis
         Trait axis key, used to build the attribute name (e.g.
         ``mlwp_time_trait``).
-    trait : Enum
-        Trait profile the dataset is being validated against.
+    enum_cls : type[Enum]
+        Enum of the valid profiles for ``trait_axis`` (e.g. ``Time``).
+    trait : Enum | None, optional
+        Trait profile the dataset is being validated against. ``None`` when the
+        trait axis is not validated; the attribute is then only checked to be a
+        valid profile value.
 
     Returns
     -------
@@ -47,7 +52,7 @@ def check_trait_attribute(
         report.add(section, requirement, "PASS", "Optional attribute not set")
         return report
 
-    allowed = [item.value for item in type(trait)]
+    allowed = [item.value for item in enum_cls]
     if str(value) not in allowed:
         report.add(
             section,
@@ -55,6 +60,8 @@ def check_trait_attribute(
             "FAIL",
             f"Value '{value}' is not one of {allowed}",
         )
+    elif trait is None:
+        report.add(section, requirement, "PASS", f"Value '{value}' is a valid profile")
     elif str(value) != trait.value:
         report.add(
             section,

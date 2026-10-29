@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from enum import Enum
+from enum import StrEnum
 
 import xarray as xr
 
@@ -21,7 +21,7 @@ IDENTIFIER = "spatial_coordinate"
 SPACE_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("space")
 
 
-class Space(str, Enum):
+class Space(StrEnum):
     """Supported spatial trait profiles."""
 
     GRID = "grid"
@@ -156,6 +156,6 @@ def validate_dataset(
     - If present, `{SPACE_TRAIT_ATTR}` SHOULD equal `{trait.value}`, the profile being
       validated.
     """
-    report += check_trait_attribute(ds, trait_axis="space", trait=trait)
+    report += check_trait_attribute(ds, trait_axis="space", enum_cls=Space, trait=trait)
 
     return report, textwrap.dedent(spec_text)
