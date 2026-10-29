@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Space("grid")` no longer exist (use `Space.GRID`, or `value in Space` to
   check a string), `isinstance(x, Space)` no longer holds, and `str(Space.GRID)`
   is now `"grid"` rather than `"Space.GRID"`.
-  [\#PR](https://github.com/mlwp-tools/mlwp-data-specs/pull/PR), @leifdenby
+  [\#42](https://github.com/mlwp-tools/mlwp-data-specs/pull/42), @leifdenby
 
 ## [0.1.0](https://github.com/mlwp-tools/mlwp-data-specs/releases/tag/v0.1.0)
 
