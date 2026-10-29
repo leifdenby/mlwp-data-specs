@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from enum import Enum
+from enum import StrEnum
 
 import xarray as xr
 
@@ -21,7 +21,7 @@ IDENTIFIER = "time_coordinate"
 TIME_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("time")
 
 
-class Time(str, Enum):
+class Time(StrEnum):
     """Supported temporal trait profiles."""
 
     FORECAST = "forecast"
@@ -150,7 +150,10 @@ def validate_dataset(
     - If present, `{TIME_TRAIT_ATTR}` MUST be one of: {allowed}.
     - If present, `{TIME_TRAIT_ATTR}` SHOULD equal `{trait.value}`, the profile being
       validated.
+    - The requirement on the value of `{TIME_TRAIT_ATTR}` applies to any dataset
+      that carries the attribute, including datasets validated only against other
+      traits.
     """
-    report += check_trait_attribute(ds, trait_axis="time", trait=trait)
+    report += check_trait_attribute(ds, trait_axis="time", trait_cls=Time, trait=trait)
 
     return report, textwrap.dedent(spec_text)

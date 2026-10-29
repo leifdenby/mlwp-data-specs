@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from enum import Enum
+from enum import StrEnum
 
 import xarray as xr
 
@@ -23,7 +23,7 @@ IDENTIFIER = "uncertainty"
 UNCERTAINTY_TRAIT_ATTR = TRAIT_ATTR_FORMAT.format("uncertainty")
 
 
-class Uncertainty(str, Enum):
+class Uncertainty(StrEnum):
     """Supported uncertainty trait profiles."""
 
     DETERMINISTIC = "deterministic"
@@ -162,7 +162,12 @@ def validate_dataset(
     - If present, `{UNCERTAINTY_TRAIT_ATTR}` MUST be one of: {allowed}.
     - If present, `{UNCERTAINTY_TRAIT_ATTR}` SHOULD equal `{trait.value}`, the
       profile being validated.
+    - The requirement on the value of `{UNCERTAINTY_TRAIT_ATTR}` applies to any
+      dataset that carries the attribute, including datasets validated only
+      against other traits.
     """
-    report += check_trait_attribute(ds, trait_axis="uncertainty", trait=trait)
+    report += check_trait_attribute(
+        ds, trait_axis="uncertainty", trait_cls=Uncertainty, trait=trait
+    )
 
     return report, textwrap.dedent(spec_text)

@@ -20,8 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trait specs now include a "Global Attributes" section: datasets MAY declare
   `mlwp_{time,space,uncertainty}_trait`; if present the value MUST be a valid
   profile (FAIL otherwise) and SHOULD match the validated profile (WARNING
-  otherwise). Previously invalid/mismatching values were only logged. All trait
-  spec versions are now `0.1.1-draft`.
+  otherwise). Previously invalid/mismatching values were only logged. An invalid
+  value is reported even when that trait is not being validated (e.g.
+  `validate_dataset(ds, space="grid")` with `mlwp_time_trait="nowcast"`). All
+  trait spec versions are now `0.1.1-draft`.
+- `Time`, `Space` and `Uncertainty` are now `StrEnum`s, so `str()` and f-strings
+  give the profile value (`"forecast"`) rather than `"Time.FORECAST"`. Trait
+  attributes may be set to either a string or an enum member.
 
 ## [0.1.0](https://github.com/mlwp-tools/mlwp-data-specs/releases/tag/v0.1.0)
 
