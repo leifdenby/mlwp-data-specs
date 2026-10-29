@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from enum import Enum
 
 import xarray as xr
 
@@ -11,20 +10,16 @@ from mlwp_data_specs.checks.coords.dimensions import check_dim_variants
 from mlwp_data_specs.checks.coords.names import check_required_coords
 from mlwp_data_specs.checks.coords.temporal import check_time_coordinate_metadata
 from mlwp_data_specs.specs.reporting import ValidationReport
+from mlwp_data_specs.trait_profiles import Time
+
+__all__ = ["IDENTIFIER", "VERSION", "Time", "validate_dataset"]
 
 VERSION = "0.1.0"
 IDENTIFIER = "time_coordinate"
 
 
-class Time(str, Enum):
-    """Supported temporal trait profiles."""
-
-    FORECAST = "forecast"
-    OBSERVATION = "observation"
-
-
 def validate_dataset(
-    ds: xr.Dataset | None, *, trait: Time
+    ds: xr.Dataset | None, *, trait: str
 ) -> tuple[ValidationReport, str]:
     """Validate a dataset against the selected time trait specification.
 
@@ -33,8 +28,8 @@ def validate_dataset(
     ds : xr.Dataset | None
         Dataset to validate. ``None`` is only supported when checks are disabled
         (e.g. docs rendering mode via ``skip_all_checks``).
-    trait : Time
-        Selected time trait profile.
+    trait : str
+        Selected time trait profile, one of the `Time` members.
 
     Returns
     -------
@@ -47,7 +42,7 @@ def validate_dataset(
     ---
     version: {VERSION}
     trait: {IDENTIFIER}
-    profile: {trait.value}
+    profile: {trait}
     ---
 
     ## 1. Introduction
@@ -59,7 +54,7 @@ def validate_dataset(
 
     ## 2. Scope
 
-    This specification applies to datasets validated with the `time={trait.value}`
+    This specification applies to datasets validated with the `time={trait}`
     profile.
 
     ## 3. Structural Requirements

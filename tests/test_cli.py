@@ -6,6 +6,7 @@ import xarray as xr
 from pytest import CaptureFixture, MonkeyPatch
 
 from mlwp_data_specs.specs import cli
+from mlwp_data_specs.trait_profiles import Space, Time
 
 
 def _forecast_grid_ds() -> xr.Dataset:
@@ -50,13 +51,13 @@ def test_cli_requires_trait_selector() -> None:
 def test_cli_runs_selected_traits(monkeypatch: MonkeyPatch) -> None:
     """CLI runs only selected trait validators and returns success on pass."""
     monkeypatch.setattr(xr, "open_zarr", lambda *args, **kwargs: _forecast_grid_ds())
-    code = cli.main(["dummy.zarr", "--space", "grid", "--time", "forecast"])
+    code = cli.main(["dummy.zarr", "--space", Space.GRID, "--time", Time.FORECAST])
     assert code == 0
 
 
 def test_cli_print_spec_markdown(capsys: CaptureFixture[str]) -> None:
     """CLI prints markdown spec text when `--print-spec-markdown` is set."""
-    code = cli.main(["--space", "grid", "--print-spec-markdown"])
+    code = cli.main(["--space", Space.GRID, "--print-spec-markdown"])
     assert code == 0
     captured = capsys.readouterr()
     assert "trait: spatial_coordinate" in captured.out

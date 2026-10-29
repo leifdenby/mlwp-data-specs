@@ -6,13 +6,14 @@ import xarray as xr
 
 from mlwp_data_specs.checks.coords.names import check_coordinate_attrs
 from mlwp_data_specs.specs.reporting import ValidationReport, log_function_call
+from mlwp_data_specs.trait_profiles import Uncertainty
 
 
 @log_function_call
 def check_uncertainty_coordinate_metadata(
     ds: xr.Dataset,
     *,
-    trait: object,
+    trait: str,
 ) -> ValidationReport:
     """Validate coordinate metadata for the selected uncertainty trait.
 
@@ -20,9 +21,8 @@ def check_uncertainty_coordinate_metadata(
     ----------
     ds : xr.Dataset
         Dataset being validated.
-    trait : object
-        Selected uncertainty profile enum instance (or enum-like object with a
-        ``value`` attribute).
+    trait : str
+        Selected uncertainty profile, one of the `Uncertainty` members.
 
     Returns
     -------
@@ -32,8 +32,7 @@ def check_uncertainty_coordinate_metadata(
     report = ValidationReport()
     section = "Uncertainty"
 
-    trait_value = str(getattr(trait, "value", trait))
-    if trait_value == "deterministic":
+    if trait == Uncertainty.DETERMINISTIC:
         report.add(
             section,
             "Deterministic mode metadata",
@@ -42,7 +41,7 @@ def check_uncertainty_coordinate_metadata(
         )
         return report
 
-    if trait_value == "ensemble":
+    if trait == Uncertainty.ENSEMBLE:
         report += check_coordinate_attrs(
             ds,
             section=section,
